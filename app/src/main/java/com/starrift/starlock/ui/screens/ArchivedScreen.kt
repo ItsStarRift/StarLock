@@ -28,6 +28,8 @@ private fun formatArchivedAt(millis: Long?): String {
     return sdf.format(Date(millis))
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
     val selectedTab by viewModel.selectedTab.collectAsState()
     val archivedApps by viewModel.archivedApps.collectAsState()
