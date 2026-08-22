@@ -12,13 +12,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
+import androidx.compose.ui.res.stringResource
+import com.starrift.starlock.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+private fun formatArchivedAt(millis: Long?): String {
+    if (millis == null) return ""
+    val sdf = SimpleDateFormat("dd.MM.yyyy HH:mm (z)", Locale.getDefault())
+    sdf.timeZone = TimeZone.getDefault()
+    return sdf.format(Date(millis))
+}
+
 fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
     val selectedTab by viewModel.selectedTab.collectAsState()
     val archivedApps by viewModel.archivedApps.collectAsState()
     val archivedAccounts by viewModel.archivedAccounts.collectAsState()
+    var confirmUnarchiveAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     Scaffold(
         topBar = {
@@ -78,8 +92,8 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                             items(archivedApps, key = { it.id }) { app ->
                                 ArchivedRow(
                                     title = app.name,
-                                    subtitle = null,
-                                    onUnarchive = { viewModel.unarchiveApp(app.id) }
+                                    subtitle = formatArchivedAt(app.archivedAt),
+                                    onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveApp(app.id) } }
                                 )
                             }
                         }
@@ -97,8 +111,8 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                             items(archivedAccounts, key = { it.id }) { account ->
                                 ArchivedRow(
                                     title = account.name,
-                                    subtitle = account.appName,
-                                    onUnarchive = { viewModel.unarchiveAccount(account.id) }
+                                    subtitle = "${account.appName} • ${formatArchivedAt(account.archivedAt)}",
+                                    onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveAccount(account.id) } }
                                 )
                             }
                         }
@@ -109,6 +123,23 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                 }
             }
         }
+    }
+
+    if (confirmUnarchiveAction != null) {
+        AlertDialog(
+            onDismissRequest = { confirmUnarchiveAction = null },
+            title = { Text(stringResource(R.string.restore_confirm_title)) },
+            text = { Text(stringResource(R.string.restore_confirm_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmUnarchiveAction?.invoke()
+                    confirmUnarchiveAction = null
+                }) { Text(stringResource(R.string.restore)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmUnarchiveAction = null }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
     }
 }
 

@@ -16,6 +16,7 @@ data class AccountWithAppName(
     val isFavorite: Boolean,
     val isDeleted: Boolean,
     val deletedAt: Long?,
+    val archivedAt: Long?,
     val appName: String
 )
 
@@ -61,11 +62,11 @@ interface AccountDao {
     @Query("UPDATE accounts SET isDeleted = 0, deletedAt = NULL WHERE appId = :appId")
     suspend fun restoreAccountsByAppId(appId: Long)
 
-    @Query("SELECT accounts.*, apps.name AS appName FROM accounts INNER JOIN apps ON accounts.appId = apps.id WHERE accounts.isArchived = 1 AND accounts.isDeleted = 0 ORDER BY accounts.name COLLATE NOCASE ASC")
+    @Query("SELECT accounts.*, apps.name AS appName FROM accounts INNER JOIN apps ON accounts.appId = apps.id WHERE accounts.isArchived = 1 AND accounts.isDeleted = 0 ORDER BY accounts.archivedAt DESC")
     fun getArchivedAccounts(): Flow<List<AccountWithAppName>>
 
-    @Query("UPDATE accounts SET isArchived = 1 WHERE id = :accountId")
-    suspend fun archiveAccount(accountId: Long)
+    @Query("UPDATE accounts SET isArchived = 1, archivedAt = :archivedAt WHERE id = :accountId")
+    suspend fun archiveAccount(accountId: Long, archivedAt: Long)
 
     @Query("UPDATE accounts SET isArchived = 0 WHERE id = :accountId")
     suspend fun unarchiveAccount(accountId: Long)

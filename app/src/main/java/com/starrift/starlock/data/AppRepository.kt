@@ -50,9 +50,9 @@ class AppRepository(private val database: AppDatabase) {
     fun getArchivedApps(): Flow<List<AppItem>> = database.appDao().getArchivedApps()
     fun getArchivedAccounts(): Flow<List<AccountWithAppName>> = database.accountDao().getArchivedAccounts()
 
-    suspend fun archiveApp(appId: Long) = database.appDao().archiveApp(appId)
+    suspend fun archiveApp(appId: Long) = database.appDao().archiveApp(appId, System.currentTimeMillis())
     suspend fun unarchiveApp(appId: Long) = database.appDao().unarchiveApp(appId)
-    suspend fun archiveAccount(accountId: Long) = database.accountDao().archiveAccount(accountId)
+    suspend fun archiveAccount(accountId: Long) = database.accountDao().archiveAccount(accountId, System.currentTimeMillis())
     suspend fun unarchiveAccount(accountId: Long) = database.accountDao().unarchiveAccount(accountId)
 
     fun getAllAppsWithCount(): Flow<List<AppWithAccountCount>> =

@@ -18,5 +18,6 @@ data class AppItem(
     val isFavorite: Boolean = false,
     val isDeleted: Boolean = false,
     val deletedAt: Long? = null,
-    val isArchived: Boolean = false
+    val isArchived: Boolean = false,
+    val archivedAt: Long? = null
 )

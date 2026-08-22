@@ -67,11 +67,11 @@ interface AppDao {
     @Query("UPDATE apps SET isFavorite = :isFavorite WHERE id = :appId")
     suspend fun setFavorite(appId: Long, isFavorite: Boolean)
 
-    @Query("SELECT * FROM apps WHERE isArchived = 1 AND isDeleted = 0 ORDER BY name COLLATE NOCASE ASC")
+    @Query("SELECT * FROM apps WHERE isArchived = 1 AND isDeleted = 0 ORDER BY archivedAt DESC")
     fun getArchivedApps(): Flow<List<AppItem>>
 
-    @Query("UPDATE apps SET isArchived = 1 WHERE id = :appId")
-    suspend fun archiveApp(appId: Long)
+    @Query("UPDATE apps SET isArchived = 1, archivedAt = :archivedAt WHERE id = :appId")
+    suspend fun archiveApp(appId: Long, archivedAt: Long)
 
     @Query("UPDATE apps SET isArchived = 0 WHERE id = :appId")
     suspend fun unarchiveApp(appId: Long)
