@@ -509,3 +509,4 @@ private fun SettingsRow(icon: ImageVector, title: String, subtitle: String, onCl
         }
             Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
 }
+}
