@@ -107,6 +107,7 @@ class AppRepository(private val database: AppDatabase) {
     }
 
     suspend fun deleteField(field: AccountField) = database.accountFieldDao().deleteField(field)
+    suspend fun updateField(field: AccountField) = database.accountFieldDao().updateField(field)
 
     /** Verilen dosya yolundaki görseli Base64 string'e çevirir, yoksa null döner. */
     private fun iconPathToBase64(path: String?): String? {
