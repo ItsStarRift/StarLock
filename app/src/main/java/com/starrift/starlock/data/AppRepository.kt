@@ -55,6 +55,11 @@ class AppRepository(private val database: AppDatabase) {
     suspend fun archiveAccount(accountId: Long) = database.accountDao().archiveAccount(accountId, System.currentTimeMillis())
     suspend fun unarchiveAccount(accountId: Long) = database.accountDao().unarchiveAccount(accountId)
 
+    fun getArchivedFields(): Flow<List<AccountFieldWithAccountName>> = database.accountFieldDao().getArchivedFields()
+
+    suspend fun archiveField(fieldId: Long) = database.accountFieldDao().archiveField(fieldId, System.currentTimeMillis())
+    suspend fun unarchiveField(fieldId: Long) = database.accountFieldDao().unarchiveField(fieldId)
+
     fun getAllAppsWithCount(): Flow<List<AppWithAccountCount>> =
         database.appDao().getAllAppsWithCount()
 

@@ -16,13 +16,15 @@ data class AccountFieldWithAccountName(
     val orderIndex: Int,
     val isDeleted: Boolean,
     val deletedAt: Long?,
+    val isArchived: Boolean,
+    val archivedAt: Long?,
     val accountName: String
 )
 
 @Dao
 interface AccountFieldDao {
 
-    @Query("SELECT * FROM account_fields WHERE accountId = :accountId AND isDeleted = 0 ORDER BY orderIndex ASC")
+    @Query("SELECT * FROM account_fields WHERE accountId = :accountId AND isDeleted = 0 AND isArchived = 0 ORDER BY orderIndex ASC")
     fun getFieldsForAccount(accountId: Long): Flow<List<AccountField>>
 
     @Insert
@@ -51,6 +53,15 @@ interface AccountFieldDao {
 
     @Query("DELETE FROM account_fields WHERE id = :fieldId")
     suspend fun permanentlyDeleteField(fieldId: Long)
+
+    @Query("UPDATE account_fields SET isArchived = 1, archivedAt = :archivedAt WHERE id = :fieldId")
+    suspend fun archiveField(fieldId: Long, archivedAt: Long)
+
+    @Query("UPDATE account_fields SET isArchived = 0, archivedAt = NULL WHERE id = :fieldId")
+    suspend fun unarchiveField(fieldId: Long)
+
+    @Query("SELECT account_fields.*, accounts.name AS accountName FROM account_fields INNER JOIN accounts ON account_fields.accountId = accounts.id WHERE account_fields.isArchived = 1 AND account_fields.isDeleted = 0 AND accounts.isDeleted = 0 ORDER BY account_fields.archivedAt DESC")
+    fun getArchivedFields(): Flow<List<AccountFieldWithAccountName>>
 
     @Update
     suspend fun updateField(field: AccountField)

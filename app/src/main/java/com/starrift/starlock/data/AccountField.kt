@@ -30,5 +30,7 @@ data class AccountField(
     val isCustomLabel: Boolean,
     val orderIndex: Int,
     val isDeleted: Boolean = false,
-    val deletedAt: Long? = null
+    val deletedAt: Long? = null,
+    val isArchived: Boolean = false,
+    val archivedAt: Long? = null
 )
