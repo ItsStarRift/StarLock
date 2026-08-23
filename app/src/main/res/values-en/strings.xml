@@ -126,4 +126,5 @@
     <string name="archived_fields_placeholder">Field archiving coming soon</string>
     <string name="unarchive">Unarchive</string>
     <string name="archive">Archive</string>
+    <string name="edit_field_title">Edit Field</string>
 </resources>

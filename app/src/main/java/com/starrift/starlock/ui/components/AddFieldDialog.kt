@@ -8,11 +8,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.starrift.starlock.R
+import com.starrift.starlock.data.AccountField
 
 @Composable
 fun AddFieldDialog(
     onDismiss: () -> Unit,
-    onConfirm: (label: String, value: String, isCustom: Boolean) -> Unit
+    onConfirm: (label: String, value: String, isCustom: Boolean) -> Unit,
+    existingField: AccountField? = null
 ) {
     val customOptionLabel = stringResource(R.string.custom_field_option)
     val predefinedLabels = listOf(
@@ -23,13 +25,14 @@ fun AddFieldDialog(
         customOptionLabel
     )
     var selectedLabel by remember { mutableStateOf(predefinedLabels.first()) }
-    var customLabel by remember { mutableStateOf("") }
-    var value by remember { mutableStateOf("") }
-    var isCustomStep by remember { mutableStateOf(false) }
+    var customLabel by remember { mutableStateOf(existingField?.label ?: "") }
+    var value by remember { mutableStateOf(existingField?.value ?: "") }
+    var isCustomStep by remember { mutableStateOf(existingField != null) }
+    val isEditMode = existingField != null
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (isCustomStep) stringResource(R.string.custom_field_title) else stringResource(R.string.cd_add_field)) },
+        title = { Text(if (isEditMode) stringResource(R.string.edit_field_title) else if (isCustomStep) stringResource(R.string.custom_field_title) else stringResource(R.string.cd_add_field)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (!isCustomStep) {

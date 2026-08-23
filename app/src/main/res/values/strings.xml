@@ -126,4 +126,5 @@
     <string name="archived_fields_placeholder">Terim arşivleme yakında</string>
     <string name="unarchive">Arşivden çıkar</string>
     <string name="archive">Arşivle</string>
+    <string name="edit_field_title">Terimi Düzenle</string>
 </resources>
