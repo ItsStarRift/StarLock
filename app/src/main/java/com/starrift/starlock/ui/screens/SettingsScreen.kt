@@ -170,9 +170,9 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArc
                 subtitle = stringResource(R.string.archived_sub),
                 onClick = onArchivedClick
             )
-        Spacer(Modifier.height(20.dp))
 
         }
+        Spacer(Modifier.height(20.dp))
         SettingsGroup {
             SettingsRow(
                 icon = Icons.Default.Email,
@@ -498,13 +498,14 @@ private fun SettingsRow(icon: ImageVector, title: String, subtitle: String, onCl
         ) { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp)) }
         Spacer(Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f, fill = false))
+                if (trailingText != null) {
+                    Spacer(Modifier.width(8.dp))
+                    Text(trailingText, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                }
+            }
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
         }
-            if (trailingText != null) {
-                Text(trailingText, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-                Spacer(Modifier.width(8.dp))
-            }
-        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-    }
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
 }
