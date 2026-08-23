@@ -39,6 +39,15 @@ private const val GITHUB_URL = "https://github.com/ItsStarRift/StarLock"
 private const val FEEDBACK_EMAIL = "omerplt.dev@gmail.com"
 private val APP_VERSION = BuildConfig.VERSION_NAME
 
+private fun formatLastAction(context: android.content.Context, key: String): String? {
+    val prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+    val millis = prefs.getLong(key, -1L)
+    if (millis == -1L) return null
+    val sdf = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm (z)", java.util.Locale.getDefault())
+    sdf.timeZone = java.util.TimeZone.getDefault()
+    return sdf.format(java.util.Date(millis))
+}
+
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArchivedClick: () -> Unit, themeMode: String, onThemeChange: (String) -> Unit) {
     val context = LocalContext.current
@@ -72,6 +81,7 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArc
         if (uri != null) {
             scope.launch {
                 val success = viewModel.exportTo(context, uri)
+                    if (success) prefs.edit().putLong("last_export_at", System.currentTimeMillis()).apply()
                 Toast.makeText(context, if (success) exportSuccessMsg else exportFailMsg, Toast.LENGTH_SHORT).show()
             }
         }
@@ -134,14 +144,16 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArc
                 icon = Icons.Default.Upload,
                 title = stringResource(R.string.export_data),
                 subtitle = stringResource(R.string.export_data_sub),
-                onClick = { exportLauncher.launch("StarLock-Backup.json") }
+                onClick = { exportLauncher.launch("StarLock-Backup.json") },
+                trailingText = formatLastAction(context, "last_export_at")
             )
             SettingsDivider()
             SettingsRow(
                 icon = Icons.Default.Download,
                 title = stringResource(R.string.import_data),
                 subtitle = stringResource(R.string.import_data_sub),
-                onClick = { importLauncher.launch(arrayOf("application/json")) }
+                onClick = { importLauncher.launch(arrayOf("application/json")) },
+                trailingText = formatLastAction(context, "last_import_at")
             )
             SettingsDivider()
             SettingsRow(
@@ -150,6 +162,7 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArc
                 subtitle = stringResource(R.string.trash_sub),
                 onClick = onTrashClick
             )
+        SettingsDivider()
 
             SettingsRow(
                 icon = Icons.Default.Archive,
@@ -302,6 +315,7 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArc
                     if (uri != null) {
                         scope.launch {
                             val success = viewModel.importFrom(context, uri)
+                                if (success) prefs.edit().putLong("last_import_at", System.currentTimeMillis()).apply()
                             Toast.makeText(context, if (success) importSuccessMsg else importFailMsg, Toast.LENGTH_SHORT).show()
                         }
                     }
@@ -473,7 +487,7 @@ private fun SettingsDivider() {
 }
 
 @Composable
-private fun SettingsRow(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
+private fun SettingsRow(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit, trailingText: String? = null) {
     Row(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -487,6 +501,10 @@ private fun SettingsRow(icon: ImageVector, title: String, subtitle: String, onCl
             Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
         }
+            if (trailingText != null) {
+                Text(trailingText, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                Spacer(Modifier.width(8.dp))
+            }
         Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
     }
 }
