@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -118,6 +120,8 @@ fun TrashScreen(viewModel: TrashViewModel, onBackClick: () -> Unit) {
                         TrashRow(
                             title = app.name,
                             subtitle = formatDeletedAt(app.deletedAt),
+                            iconPath = app.iconPath,
+                            isApp = true,
                             isSelectionMode = isSelectionMode,
                             isSelected = selectedIds.contains(app.id),
                             onClick = {
@@ -132,6 +136,8 @@ fun TrashScreen(viewModel: TrashViewModel, onBackClick: () -> Unit) {
                         TrashRow(
                             title = account.name,
                             subtitle = "${account.appName} • ${formatDeletedAt(account.deletedAt)}",
+                            iconPath = account.iconPath,
+                            isApp = false,
                             isSelectionMode = isSelectionMode,
                             isSelected = selectedIds.contains(account.id),
                             onClick = {
@@ -201,6 +207,8 @@ fun TrashScreen(viewModel: TrashViewModel, onBackClick: () -> Unit) {
 private fun TrashRow(
     title: String,
     subtitle: String,
+    iconPath: String? = null,
+    isApp: Boolean = true,
     isSelectionMode: Boolean,
     isSelected: Boolean,
     onClick: () -> Unit,
@@ -217,6 +225,37 @@ private fun TrashRow(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val iconShape = if (isApp) RoundedCornerShape(12.dp) else CircleShape
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(iconShape)
+                .background(MaterialTheme.colorScheme.primary),
+            contentAlignment = Alignment.Center
+        ) {
+            if (iconPath != null) {
+                AsyncImage(
+                    model = iconPath,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize().clip(iconShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else if (isApp) {
+                Text(
+                    title.take(1).uppercase(),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+            } else {
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+        Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
             Text(

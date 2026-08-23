@@ -7,6 +7,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.*
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -94,7 +96,9 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                             items(archivedApps, key = { it.id }) { app ->
                                 ArchivedRow(
                                     title = app.name,
-                                    subtitle = formatArchivedAt(app.archivedAt),
+                                    subtitle = formatArchivedAt(app.archivedAt),,
+                        iconPath = app.iconPath,
+                        isApp = true,
                                     onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveApp(app.id) } }
                                 )
                             }
@@ -113,7 +117,9 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                             items(archivedAccounts, key = { it.id }) { account ->
                                 ArchivedRow(
                                     title = account.name,
-                                    subtitle = "${account.appName} • ${formatArchivedAt(account.archivedAt)}",
+                                    subtitle = "${account.appName} • ${formatArchivedAt(account.archivedAt)}",,
+                        iconPath = account.iconPath,
+                        isApp = false,
                                     onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveAccount(account.id) } }
                                 )
                             }
@@ -150,6 +156,8 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
 private fun ArchivedRow(
     title: String,
     subtitle: String?,
+    iconPath: String? = null,
+    isApp: Boolean = true,
     onUnarchive: () -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -159,6 +167,37 @@ private fun ArchivedRow(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val iconShape = if (isApp) RoundedCornerShape(12.dp) else CircleShape
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(iconShape)
+                    .background(MaterialTheme.colorScheme.primary),
+                contentAlignment = Alignment.Center
+            ) {
+                if (iconPath != null) {
+                    AsyncImage(
+                        model = iconPath,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize().clip(iconShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else if (isApp) {
+                    Text(
+                        title.take(1).uppercase(),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = title, fontWeight = FontWeight.SemiBold)
                 if (subtitle != null) {
