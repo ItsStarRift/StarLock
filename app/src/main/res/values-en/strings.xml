@@ -127,4 +127,8 @@
     <string name="unarchive">Unarchive</string>
     <string name="archive">Archive</string>
     <string name="edit_field_title">Edit Field</string>
+    <string name="cd_close">Close</string>
+    <string name="cd_edit">Edit</string>
+    <string name="cd_archive_field">Archive Field</string>
+    <string name="field_selected_count">%1$d selected</string>
 </resources>

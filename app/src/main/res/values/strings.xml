@@ -127,4 +127,8 @@
     <string name="unarchive">Arşivden çıkar</string>
     <string name="archive">Arşivle</string>
     <string name="edit_field_title">Terimi Düzenle</string>
+    <string name="cd_close">Kapat</string>
+    <string name="cd_edit">Düzenle</string>
+    <string name="cd_archive_field">Terimi Arşivle</string>
+    <string name="field_selected_count">%1$d seçildi</string>
 </resources>

@@ -4,14 +4,20 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -32,22 +38,53 @@ fun AccountDetailScreen(
     onBackClick: () -> Unit
 ) {
     val fields by viewModel.fields.collectAsState()
+    val selectedIds by viewModel.selectedIds.collectAsState()
+    val selectionMode = selectedIds.isNotEmpty()
     var showAddDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.account_detail_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back))
+            if (selectionMode) {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.field_selected_count, selectedIds.size)) },
+                    navigationIcon = {
+                        IconButton(onClick = { viewModel.clearSelection() }) {
+                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_close))
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = { showEditDialog = true },
+                            enabled = selectedIds.size == 1
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit))
+                        }
+                        IconButton(onClick = { viewModel.archiveSelectedFields() }) {
+                            Icon(Icons.Default.Archive, contentDescription = stringResource(R.string.cd_archive_field))
+                        }
+                        IconButton(onClick = { showDeleteConfirm = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_confirm), tint = MaterialTheme.colorScheme.error)
+                        }
                     }
-                }
-            )
+                )
+            } else {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.account_detail_title)) },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back))
+                        }
+                    }
+                )
+            }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_field))
+            if (!selectionMode) {
+                FloatingActionButton(onClick = { showAddDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_field))
+                }
             }
         }
     ) { padding ->
@@ -63,7 +100,9 @@ fun AccountDetailScreen(
                 items(fields, key = { it.id }) { field ->
                     FieldItemCard(
                         field = field,
-                        onDelete = { viewModel.deleteField(field) }
+                        selectionMode = selectionMode,
+                        isSelected = field.id in selectedIds,
+                        onToggleSelect = { viewModel.toggleSelect(field.id) }
                     )
                 }
             }
@@ -78,18 +117,61 @@ fun AccountDetailScreen(
                 }
             )
         }
+
+        if (showEditDialog) {
+            val editingField = fields.find { it.id in selectedIds }
+            if (editingField != null) {
+                AddFieldDialog(
+                    onDismiss = { showEditDialog = false },
+                    onConfirm = { label, value, isCustom ->
+                        viewModel.editField(editingField.id, label, value, isCustom)
+                        showEditDialog = false
+                    },
+                    existingField = editingField
+                )
+            } else {
+                showEditDialog = false
+            }
+        }
+
+        if (showDeleteConfirm) {
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirm = false },
+                title = { Text(stringResource(R.string.field_selected_count, selectedIds.size)) },
+                text = { Text(stringResource(R.string.delete_field_text)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.deleteSelectedFields()
+                        showDeleteConfirm = false
+                    }) { Text(stringResource(R.string.delete_confirm), color = MaterialTheme.colorScheme.error) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) }
+                }
+            )
+        }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun FieldItemCard(field: AccountField, onDelete: () -> Unit) {
+fun FieldItemCard(
+    field: AccountField,
+    selectionMode: Boolean,
+    isSelected: Boolean,
+    onToggleSelect: () -> Unit
+) {
     val context = LocalContext.current
     var isPasswordVisible by remember { mutableStateOf(false) }
-    var showDeleteConfirm by remember { mutableStateOf(false) }
     val isPassword = field.label.contains("Şifre", ignoreCase = true) || field.label.contains("Password", ignoreCase = true)
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+            .combinedClickable(
+                onClick = { if (selectionMode) onToggleSelect() },
+                onLongClick = { if (!selectionMode) onToggleSelect() }
+            ),
+        colors = if (isSelected) CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer) else CardDefaults.cardColors(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -121,26 +203,6 @@ fun FieldItemCard(field: AccountField, onDelete: () -> Unit) {
             }) {
                 Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_copy))
             }
-            IconButton(onClick = { showDeleteConfirm = true }) {
-                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_confirm), tint = MaterialTheme.colorScheme.error)
-            }
         }
-    }
-
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(stringResource(R.string.delete_item_title, field.label)) },
-            text = { Text(stringResource(R.string.delete_field_text)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    onDelete()
-                    showDeleteConfirm = false
-                }) { Text(stringResource(R.string.delete_confirm), color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) }
-            }
-        )
     }
 }
