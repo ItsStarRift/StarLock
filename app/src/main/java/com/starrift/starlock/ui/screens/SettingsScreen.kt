@@ -30,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import com.starrift.starlock.R
@@ -39,13 +40,16 @@ private const val GITHUB_URL = "https://github.com/ItsStarRift/StarLock"
 private const val FEEDBACK_EMAIL = "omerplt.dev@gmail.com"
 private val APP_VERSION = BuildConfig.VERSION_NAME
 
-private fun formatLastAction(context: android.content.Context, key: String): String? {
+private fun formatLastAction(context: android.content.Context, key: String): Pair<String, String>? {
     val prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
     val millis = prefs.getLong(key, -1L)
     if (millis == -1L) return null
-    val sdf = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm (z)", java.util.Locale.getDefault())
-    sdf.timeZone = java.util.TimeZone.getDefault()
-    return sdf.format(java.util.Date(millis))
+    val datePart = java.text.SimpleDateFormat("dd.MM.yyyy", java.util.Locale.getDefault())
+    val timePart = java.text.SimpleDateFormat("HH:mm (z)", java.util.Locale.getDefault())
+    datePart.timeZone = java.util.TimeZone.getDefault()
+    timePart.timeZone = java.util.TimeZone.getDefault()
+    val date = java.util.Date(millis)
+    return Pair(datePart.format(date), timePart.format(date))
 }
 
 @Composable
@@ -487,7 +491,7 @@ private fun SettingsDivider() {
 }
 
 @Composable
-private fun SettingsRow(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit, trailingText: String? = null) {
+private fun SettingsRow(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit, trailingText: Pair<String, String>? = null) {
     Row(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -498,14 +502,15 @@ private fun SettingsRow(icon: ImageVector, title: String, subtitle: String, onCl
         ) { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp)) }
         Spacer(Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f, fill = false))
-                if (trailingText != null) {
-                    Spacer(Modifier.width(8.dp))
-                    Text(trailingText, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-                }
-            }
+            Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+        }
+        if (trailingText != null) {
+            Column(horizontalAlignment = Alignment.End) {
+                Text(trailingText.first, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), textAlign = TextAlign.End)
+                Text(trailingText.second, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), textAlign = TextAlign.End)
+            }
+            Spacer(Modifier.width(8.dp))
         }
             Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
 }
