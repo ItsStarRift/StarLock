@@ -96,7 +96,7 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                             items(archivedApps, key = { it.id }) { app ->
                                 ArchivedRow(
                                     title = app.name,
-                                    subtitle = formatArchivedAt(app.archivedAt),,
+                                    subtitle = formatArchivedAt(app.archivedAt),
                         iconPath = app.iconPath,
                         isApp = true,
                                     onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveApp(app.id) } }
@@ -117,7 +117,7 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                             items(archivedAccounts, key = { it.id }) { account ->
                                 ArchivedRow(
                                     title = account.name,
-                                    subtitle = "${account.appName} • ${formatArchivedAt(account.archivedAt)}",,
+                                    subtitle = "${account.appName} • ${formatArchivedAt(account.archivedAt)}",
                         iconPath = account.iconPath,
                         isApp = false,
                                     onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveAccount(account.id) } }
