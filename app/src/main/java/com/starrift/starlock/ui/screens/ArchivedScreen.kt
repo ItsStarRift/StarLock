@@ -1,5 +1,8 @@
+@file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+
 package com.starrift.starlock.ui.screens
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -43,15 +46,26 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
     val archivedApps by viewModel.archivedApps.collectAsState()
     val archivedAccounts by viewModel.archivedAccounts.collectAsState()
     val archivedFields by viewModel.archivedFields.collectAsState()
+    val isSelectionMode by viewModel.isSelectionMode.collectAsState()
+    val selectedIds by viewModel.selectedIds.collectAsState()
     var confirmUnarchiveAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Arşivlenenler") },
+                title = {
+                    Text(if (isSelectionMode) "${selectedIds.size} seçildi" else "Arşivlenenler")
+                },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = { if (isSelectionMode) viewModel.exitSelectionMode() else onBackClick() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
+                    }
+                },
+                actions = {
+                    if (isSelectionMode) {
+                        IconButton(onClick = { confirmUnarchiveAction = { viewModel.unarchiveSelected() } }) {
+                            Icon(Icons.Default.Unarchive, contentDescription = "Arşivden çıkar")
+                        }
                     }
                 }
             )
@@ -106,6 +120,10 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                                     subtitle = formatArchivedAt(app.archivedAt),
                         iconPath = app.iconPath,
                         isApp = true,
+                                isSelectionMode = isSelectionMode,
+                                isSelected = selectedIds.contains(app.id),
+                                onClick = { if (isSelectionMode) viewModel.toggleSelection(app.id) },
+                                onLongClick = { viewModel.enterSelectionMode(app.id) },
                                     onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveApp(app.id) } }
                                 )
                             }
@@ -128,6 +146,10 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                         iconPath = account.iconPath,
                         isAccount = true,
                 isApp = false,
+                                isSelectionMode = isSelectionMode,
+                                isSelected = selectedIds.contains(account.id),
+                                onClick = { if (isSelectionMode) viewModel.toggleSelection(account.id) },
+                                onLongClick = { viewModel.enterSelectionMode(account.id) },
                                     onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveAccount(account.id) } }
                                 )
                             }
@@ -149,6 +171,10 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                                     subtitle = "${field.accountName} • ${formatArchivedAt(field.archivedAt)}",
                                     iconPath = null,
                                     isField = true,
+                                isSelectionMode = isSelectionMode,
+                                isSelected = selectedIds.contains(field.id),
+                                onClick = { if (isSelectionMode) viewModel.toggleSelection(field.id) },
+                                onLongClick = { viewModel.enterSelectionMode(field.id) },
                                     onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveField(field.id) } }
                                 )
                             }
@@ -186,9 +212,17 @@ private fun ArchivedRow(
     isApp: Boolean = true,
     isAccount: Boolean = false,
     isField: Boolean = false,
+    isSelectionMode: Boolean = false,
+    isSelected: Boolean = false,
+    onClick: () -> Unit = {},
+    onLongClick: () -> Unit = {},
     onUnarchive: () -> Unit
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -245,8 +279,12 @@ private fun ArchivedRow(
                     )
                 }
             }
-            IconButton(onClick = onUnarchive) {
-                Icon(Icons.Default.Unarchive, contentDescription = "Arşivden çıkar")
+            if (isSelectionMode) {
+                Checkbox(checked = isSelected, onCheckedChange = { onClick() })
+            } else {
+                IconButton(onClick = onUnarchive) {
+                    Icon(Icons.Default.Unarchive, contentDescription = "Arşivden çıkar")
+                }
             }
         }
     }

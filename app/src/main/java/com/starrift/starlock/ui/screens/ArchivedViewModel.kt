@@ -22,6 +22,43 @@ class ArchivedViewModel(private val repository: AppRepository) : ViewModel() {
 
     fun onTabChange(tab: ArchivedTab) {
         _selectedTab.value = tab
+        exitSelectionMode()
+    }
+
+    private val _isSelectionMode = MutableStateFlow(false)
+    val isSelectionMode: StateFlow<Boolean> = _isSelectionMode
+
+    private val _selectedIds = MutableStateFlow<Set<Long>>(emptySet())
+    val selectedIds: StateFlow<Set<Long>> = _selectedIds
+
+    fun enterSelectionMode(initialId: Long) {
+        _isSelectionMode.value = true
+        _selectedIds.value = setOf(initialId)
+    }
+
+    fun exitSelectionMode() {
+        _isSelectionMode.value = false
+        _selectedIds.value = emptySet()
+    }
+
+    fun toggleSelection(id: Long) {
+        val current = _selectedIds.value
+        _selectedIds.value = if (current.contains(id)) current - id else current + id
+        if (_selectedIds.value.isEmpty()) {
+            _isSelectionMode.value = false
+        }
+    }
+
+    fun unarchiveSelected() {
+        viewModelScope.launch {
+            val ids = _selectedIds.value
+            when (_selectedTab.value) {
+                ArchivedTab.APPS -> ids.forEach { repository.unarchiveApp(it) }
+                ArchivedTab.ACCOUNTS -> ids.forEach { repository.unarchiveAccount(it) }
+                ArchivedTab.FIELDS -> ids.forEach { repository.unarchiveField(it) }
+            }
+            exitSelectionMode()
+        }
     }
 
     val archivedApps: StateFlow<List<AppItem>> =
