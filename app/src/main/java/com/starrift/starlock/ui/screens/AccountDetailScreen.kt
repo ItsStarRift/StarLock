@@ -11,13 +11,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.draw.scale
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
@@ -28,6 +21,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -102,44 +97,20 @@ fun AccountDetailScreen(
                 Text(stringResource(R.string.detail_empty), style = MaterialTheme.typography.bodyLarge)
             }
         } else {
-            var draggedFields by remember(fields) { mutableStateOf(fields) }
-            var draggingIndex by remember { mutableStateOf<Int?>(null) }
-
             LazyColumn(
                 contentPadding = padding,
                 modifier = Modifier.fillMaxSize()
             ) {
-                itemsIndexed(draggedFields, key = { _, field -> field.id }) { index, field ->
+                itemsIndexed(fields, key = { _, field -> field.id }) { index, field ->
                     FieldItemCard(
                         field = field,
                         selectionMode = selectionMode,
                         isSelected = field.id in selectedIds,
-                        isDragging = draggingIndex == index,
+                        canMoveUp = index > 0,
+                        canMoveDown = index < fields.size - 1,
                         onToggleSelect = { viewModel.toggleSelect(field.id) },
-                        onDragStart = {
-                            if (!selectionMode) {
-                                viewModel.enterSelectionMode()
-                                viewModel.toggleSelect(field.id)
-                            }
-                            draggingIndex = index
-                        },
-                        onDragMove = { deltaY ->
-                            val currentIndex = draggingIndex ?: return@FieldItemCard
-                            val itemHeightPx = 88f
-                            val targetIndex = (currentIndex + (deltaY / itemHeightPx).toInt())
-                                .coerceIn(0, draggedFields.size - 1)
-                            if (targetIndex != currentIndex) {
-                                val mutable = draggedFields.toMutableList()
-                                val moved = mutable.removeAt(currentIndex)
-                                mutable.add(targetIndex, moved)
-                                draggedFields = mutable
-                                draggingIndex = targetIndex
-                            }
-                        },
-                        onDragEnd = {
-                            draggingIndex = null
-                            viewModel.commitFieldOrder(draggedFields)
-                        }
+                        onMoveUp = { viewModel.moveField(field.id, -1) },
+                        onMoveDown = { viewModel.moveField(field.id, 1) }
                     )
                 }
             }
@@ -196,57 +167,24 @@ fun FieldItemCard(
     field: AccountField,
     selectionMode: Boolean,
     isSelected: Boolean,
-    isDragging: Boolean,
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
     onToggleSelect: () -> Unit,
-    onDragStart: () -> Unit,
-    onDragMove: (Float) -> Unit,
-    onDragEnd: () -> Unit
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit
 ) {
     val context = LocalContext.current
     var isPasswordVisible by remember { mutableStateOf(false) }
     val isPassword = field.label.contains("Şifre", ignoreCase = true) || field.label.contains("Password", ignoreCase = true)
 
-    val scale by animateFloatAsState(
-        targetValue = if (isDragging) 1.04f else 1f,
-        animationSpec = tween(150),
-        label = "fieldDragScale"
-    )
-
-    val cardModifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 16.dp, vertical = 8.dp)
-        .scale(scale)
-        .combinedClickable(
-            onClick = { if (selectionMode) onToggleSelect() },
-            onLongClick = {}
-        )
-        .pointerInput(selectionMode) {
-            awaitEachGesture {
-                val down = awaitFirstDown(requireUnconsumed = false)
-                val longPress = awaitLongPressOrCancellation(down.id)
-                if (longPress != null) {
-                    onDragStart()
-                    var dragging = true
-                    while (dragging) {
-                        val event = awaitPointerEvent()
-                        val change = event.changes.firstOrNull { it.id == down.id }
-                        if (change == null || !change.pressed) {
-                            dragging = false
-                            onDragEnd()
-                        } else {
-                            val dy = change.position.y - change.previousPosition.y
-                            change.consume()
-                            onDragMove(dy)
-                        }
-                    }
-                }
-            }
-        }
-
     Card(
-        modifier = cardModifier,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+            .combinedClickable(
+                onClick = { if (selectionMode) onToggleSelect() },
+                onLongClick = { if (!selectionMode) onToggleSelect() }
+            ),
         colors = if (isSelected) CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer) else CardDefaults.cardColors(),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDragging) 8.dp else 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -267,21 +205,31 @@ fun FieldItemCard(
                     Text(text = field.value, style = MaterialTheme.typography.bodyLarge)
                 }
             }
-            if (isPassword) {
-                IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                    Icon(
-                        imageVector = if (isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = stringResource(R.string.cd_visibility)
-                    )
+            if (selectionMode) {
+                IconButton(onClick = onMoveUp, enabled = canMoveUp) {
+                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = stringResource(R.string.cd_move_up))
                 }
-            }
-            IconButton(onClick = {
-                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText(field.label, field.value)
-                clipboard.setPrimaryClip(clip)
-                Toast.makeText(context, context.getString(R.string.copied_toast), Toast.LENGTH_SHORT).show()
-            }) {
-                Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_copy))
+                IconButton(onClick = onMoveDown, enabled = canMoveDown) {
+                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = stringResource(R.string.cd_move_down))
+                }
+                Checkbox(checked = isSelected, onCheckedChange = { onToggleSelect() })
+            } else {
+                if (isPassword) {
+                    IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                        Icon(
+                            imageVector = if (isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = stringResource(R.string.cd_visibility)
+                        )
+                    }
+                }
+                IconButton(onClick = {
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip = ClipData.newPlainText(field.label, field.value)
+                    clipboard.setPrimaryClip(clip)
+                    Toast.makeText(context, context.getString(R.string.copied_toast), Toast.LENGTH_SHORT).show()
+                }) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_copy))
+                }
             }
         }
     }

@@ -69,6 +69,8 @@
     <string name="detail_empty">No fields added yet.</string>
     <string name="cd_visibility">Visibility</string>
     <string name="cd_copy">Copy</string>
+    <string name="cd_move_up">Move up</string>
+    <string name="cd_move_down">Move down</string>
     <string name="copied_toast">Copied</string>
     <string name="delete_field_text">This will be moved to Trash.</string>
     <string name="dialog_name_label">Name</string>

@@ -65,6 +65,8 @@
     <string name="detail_empty">Henüz terim eklenmemiş.</string>
     <string name="cd_visibility">Görünürlük</string>
     <string name="cd_copy">Kopyala</string>
+    <string name="cd_move_up">Yukarı taşı</string>
+    <string name="cd_move_down">Aşağı taşı</string>
     <string name="copied_toast">Kopyalandı</string>
     <string name="delete_field_text">Bu öğe Çöp Kutusu\'na taşınacak.</string>
     <string name="dialog_name_label">Ad</string>

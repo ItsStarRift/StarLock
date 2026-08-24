@@ -62,6 +62,20 @@ class AccountDetailViewModel(
         } else {
             _selectedIds.value + id
         }
+        if (_selectedIds.value.isEmpty()) {
+            _isSelectionMode.value = false
+        }
+    }
+
+    fun moveField(fieldId: Long, direction: Int) {
+        val current = fields.value.toMutableList()
+        val index = current.indexOfFirst { it.id == fieldId }
+        val targetIndex = index + direction
+        if (index !in current.indices || targetIndex !in current.indices) return
+        val temp = current[index]
+        current[index] = current[targetIndex]
+        current[targetIndex] = temp
+        commitFieldOrder(current)
     }
 
     fun clearSelection() {
