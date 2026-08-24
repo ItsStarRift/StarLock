@@ -13,6 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
 import androidx.compose.material3.*
 import androidx.compose.ui.layout.ContentScale
+import com.starrift.starlock.util.fieldIconFor
 import coil.compose.AsyncImage
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
