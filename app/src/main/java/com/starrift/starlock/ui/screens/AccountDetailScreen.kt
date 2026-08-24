@@ -30,6 +30,7 @@ import com.starrift.starlock.R
 import androidx.compose.ui.unit.dp
 import com.starrift.starlock.data.AccountField
 import com.starrift.starlock.ui.components.AddFieldDialog
+import com.starrift.starlock.util.fieldIconFor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -178,6 +179,12 @@ fun FieldItemCard(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Icon(
+                imageVector = fieldIconFor(field.label),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = field.label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.height(4.dp))

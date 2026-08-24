@@ -26,6 +26,7 @@ import com.starrift.starlock.R
 import com.starrift.starlock.data.AccountFieldWithAccountName
 import com.starrift.starlock.data.AccountWithAppName
 import com.starrift.starlock.data.AppItem
+import com.starrift.starlock.util.fieldIconFor
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -137,7 +138,7 @@ fun TrashScreen(viewModel: TrashViewModel, onBackClick: () -> Unit) {
                             title = account.name,
                             subtitle = "${account.appName} • ${formatDeletedAt(account.deletedAt)}",
                             iconPath = account.iconPath,
-                            isApp = false,
+                            isAccount = true,
                             isSelectionMode = isSelectionMode,
                             isSelected = selectedIds.contains(account.id),
                             onClick = {
@@ -151,6 +152,7 @@ fun TrashScreen(viewModel: TrashViewModel, onBackClick: () -> Unit) {
                     TrashTab.FIELDS -> items(deletedFields, key = { it.id }) { field ->
                         TrashRow(
                             title = field.label,
+                        isField = true,
                             subtitle = "${field.accountName} • ${formatDeletedAt(field.deletedAt)}",
                             isSelectionMode = isSelectionMode,
                             isSelected = selectedIds.contains(field.id),
@@ -209,6 +211,8 @@ private fun TrashRow(
     subtitle: String,
     iconPath: String? = null,
     isApp: Boolean = true,
+    isAccount: Boolean = false,
+    isField: Boolean = false,
     isSelectionMode: Boolean,
     isSelected: Boolean,
     onClick: () -> Unit,
@@ -225,36 +229,45 @@ private fun TrashRow(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val iconShape = if (isApp) RoundedCornerShape(12.dp) else CircleShape
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(iconShape)
-                .background(MaterialTheme.colorScheme.primary),
-            contentAlignment = Alignment.Center
-        ) {
-            if (iconPath != null) {
-                AsyncImage(
-                    model = iconPath,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize().clip(iconShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else if (isApp) {
-                Text(
-                    title.take(1).uppercase(),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontWeight = FontWeight.Bold
-                )
-            } else {
+            if (isField) {
                 Icon(
-                    Icons.Default.Person,
+                    fieldIconFor(title),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(20.dp)
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
                 )
+            } else if (isApp || isAccount) {
+                val iconShape = if (isApp) RoundedCornerShape(12.dp) else CircleShape
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(iconShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (iconPath != null) {
+                        AsyncImage(
+                            model = iconPath,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize().clip(iconShape),
+                            contentScale = ContentScale.Crop,
+                        )
+                    } else if (isApp) {
+                        Text(
+                            title.take(1).uppercase(),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    } else {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
-        }
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)

@@ -125,7 +125,7 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                                     title = account.name,
                                     subtitle = "${account.appName} • ${formatArchivedAt(account.archivedAt)}",
                         iconPath = account.iconPath,
-                        isApp = false,
+                        isAccount = true,
                                     onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveAccount(account.id) } }
                                 )
                             }
@@ -146,7 +146,7 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                                     title = field.label,
                                     subtitle = "${field.accountName} • ${formatArchivedAt(field.archivedAt)}",
                                     iconPath = null,
-                                    isApp = false,
+                                    isField = true,
                                     onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveField(field.id) } }
                                 )
                             }
@@ -182,6 +182,8 @@ private fun ArchivedRow(
     subtitle: String?,
     iconPath: String? = null,
     isApp: Boolean = true,
+    isAccount: Boolean = false,
+    isField: Boolean = false,
     onUnarchive: () -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -191,6 +193,14 @@ private fun ArchivedRow(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+        if (isField) {
+            Icon(
+                fieldIconFor(title),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+        } else if (isApp || isAccount) {
             val iconShape = if (isApp) RoundedCornerShape(12.dp) else CircleShape
             Box(
                 modifier = Modifier
@@ -204,7 +214,7 @@ private fun ArchivedRow(
                         model = iconPath,
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize().clip(iconShape),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop,
                     )
                 } else if (isApp) {
                     Text(
@@ -221,6 +231,7 @@ private fun ArchivedRow(
                     )
                 }
             }
+        }
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = title, fontWeight = FontWeight.SemiBold)
