@@ -11,9 +11,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.draw.graphicsLayer
+import androidx.compose.ui.draw.scale
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
@@ -213,24 +215,32 @@ fun FieldItemCard(
     val cardModifier = Modifier
         .fillMaxWidth()
         .padding(horizontal = 16.dp, vertical = 8.dp)
-        .graphicsLayer {
-            scaleX = scale
-            scaleY = scale
-        }
+        .scale(scale)
         .combinedClickable(
             onClick = { if (selectionMode) onToggleSelect() },
             onLongClick = {}
         )
         .pointerInput(selectionMode) {
-            detectDragGesturesAfterLongPress(
-                onDragStart = { onDragStart() },
-                onDragEnd = { onDragEnd() },
-                onDragCancel = { onDragEnd() },
-                onDrag = { change: androidx.compose.ui.input.pointer.PointerInputChange, dragAmount: androidx.compose.ui.geometry.Offset ->
-                    change.consume()
-                    onDragMove(dragAmount.y)
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false)
+                val longPress = awaitLongPressOrCancellation(down.id)
+                if (longPress != null) {
+                    onDragStart()
+                    var dragging = true
+                    while (dragging) {
+                        val event = awaitPointerEvent()
+                        val change = event.changes.firstOrNull { it.id == down.id }
+                        if (change == null || !change.pressed) {
+                            dragging = false
+                            onDragEnd()
+                        } else {
+                            val dy = change.position.y - change.previousPosition.y
+                            change.consume()
+                            onDragMove(dy)
+                        }
+                    }
                 }
-            )
+            }
         }
 
     Card(
