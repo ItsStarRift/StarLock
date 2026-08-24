@@ -109,6 +109,7 @@ fun AccountDetailScreen(
                         canMoveUp = index > 0,
                         canMoveDown = index < fields.size - 1,
                         onToggleSelect = { viewModel.toggleSelect(field.id) },
+                        onEnterSelection = { viewModel.enterSelectionMode() },
                         onMoveUp = { viewModel.moveField(field.id, -1) },
                         onMoveDown = { viewModel.moveField(field.id, 1) }
                     )
@@ -171,6 +172,7 @@ fun FieldItemCard(
     canMoveDown: Boolean,
     onToggleSelect: () -> Unit,
     onMoveUp: () -> Unit,
+    onEnterSelection: () -> Unit,
     onMoveDown: () -> Unit
 ) {
     val context = LocalContext.current
@@ -181,7 +183,7 @@ fun FieldItemCard(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
             .combinedClickable(
                 onClick = { if (selectionMode) onToggleSelect() },
-                onLongClick = { if (!selectionMode) onToggleSelect() }
+                onLongClick = { if (!selectionMode) { onEnterSelection(); onToggleSelect() } }
             ),
         colors = if (isSelected) CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer) else CardDefaults.cardColors(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
