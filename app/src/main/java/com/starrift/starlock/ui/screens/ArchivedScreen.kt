@@ -41,6 +41,7 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
     val selectedTab by viewModel.selectedTab.collectAsState()
     val archivedApps by viewModel.archivedApps.collectAsState()
     val archivedAccounts by viewModel.archivedAccounts.collectAsState()
+    val archivedFields by viewModel.archivedFields.collectAsState()
     var confirmUnarchiveAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     Scaffold(
@@ -132,7 +133,25 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                     }
                 }
                 ArchivedTab.FIELDS -> {
-                    EmptyArchiveMessage("Bu bölüm yakında eklenecek")
+                    if (archivedFields.isEmpty()) {
+                        EmptyArchiveMessage("Arşivlenmiş terim yok")
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(archivedFields, key = { it.id }) { field ->
+                                ArchivedRow(
+                                    title = field.label,
+                                    subtitle = "${field.accountName} • ${formatArchivedAt(field.archivedAt)}",
+                                    iconPath = null,
+                                    isApp = false,
+                                    onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveField(field.id) } }
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

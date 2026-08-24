@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.starrift.starlock.data.AccountWithAppName
+import com.starrift.starlock.data.AccountFieldWithAccountName
 import com.starrift.starlock.data.AppItem
 import com.starrift.starlock.data.AppRepository
 import kotlinx.coroutines.flow.SharingStarted
@@ -37,6 +38,14 @@ class ArchivedViewModel(private val repository: AppRepository) : ViewModel() {
 
     fun unarchiveAccount(id: Long) {
         viewModelScope.launch { repository.unarchiveAccount(id) }
+    }
+
+    val archivedFields: StateFlow<List<AccountFieldWithAccountName>> =
+        repository.getArchivedFields()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun unarchiveField(id: Long) {
+        viewModelScope.launch { repository.unarchiveField(id) }
     }
 }
 
