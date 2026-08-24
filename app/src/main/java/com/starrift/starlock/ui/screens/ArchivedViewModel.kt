@@ -84,6 +84,28 @@ class ArchivedViewModel(private val repository: AppRepository) : ViewModel() {
     fun unarchiveField(id: Long) {
         viewModelScope.launch { repository.unarchiveField(id) }
     }
+
+    fun permanentlyDeleteSelected() {
+        viewModelScope.launch {
+            val ids = _selectedIds.value
+            when (_selectedTab.value) {
+                ArchivedTab.APPS -> ids.forEach { repository.permanentlyDeleteApp(it) }
+                ArchivedTab.ACCOUNTS -> ids.forEach { repository.permanentlyDeleteAccount(it) }
+                ArchivedTab.FIELDS -> ids.forEach { repository.permanentlyDeleteField(it) }
+            }
+            exitSelectionMode()
+        }
+    }
+
+    fun permanentlyDeleteSingle(id: Long) {
+        viewModelScope.launch {
+            when (_selectedTab.value) {
+                ArchivedTab.APPS -> repository.permanentlyDeleteApp(id)
+                ArchivedTab.ACCOUNTS -> repository.permanentlyDeleteAccount(id)
+                ArchivedTab.FIELDS -> repository.permanentlyDeleteField(id)
+            }
+        }
+    }
 }
 
 class ArchivedViewModelFactory(

@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Unarchive
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -49,6 +50,7 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
     val isSelectionMode by viewModel.isSelectionMode.collectAsState()
     val selectedIds by viewModel.selectedIds.collectAsState()
     var confirmUnarchiveAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+        var confirmDeleteAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     Scaffold(
         topBar = {
@@ -65,6 +67,9 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                     if (isSelectionMode) {
                         IconButton(onClick = { confirmUnarchiveAction = { viewModel.unarchiveSelected() } }) {
                             Icon(Icons.Default.Unarchive, contentDescription = "Arşivden çıkar")
+                        }
+                        IconButton(onClick = { confirmDeleteAction = { viewModel.permanentlyDeleteSelected() } }) {
+                            Icon(Icons.Default.DeleteForever, contentDescription = stringResource(R.string.delete_permanently))
                         }
                     }
                 }
@@ -124,7 +129,8 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                                 isSelected = selectedIds.contains(app.id),
                                 onClick = { if (isSelectionMode) viewModel.toggleSelection(app.id) },
                                 onLongClick = { viewModel.enterSelectionMode(app.id) },
-                                    onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveApp(app.id) } }
+                                    onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveApp(app.id) } },
+                        onDelete = { confirmDeleteAction = { viewModel.permanentlyDeleteSingle(app.id) } }
                                 )
                             }
                         }
@@ -150,7 +156,8 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                                 isSelected = selectedIds.contains(account.id),
                                 onClick = { if (isSelectionMode) viewModel.toggleSelection(account.id) },
                                 onLongClick = { viewModel.enterSelectionMode(account.id) },
-                                    onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveAccount(account.id) } }
+                                    onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveAccount(account.id) } },
+                        onDelete = { confirmDeleteAction = { viewModel.permanentlyDeleteSingle(account.id) } }
                                 )
                             }
                         }
@@ -175,7 +182,8 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                                 isSelected = selectedIds.contains(field.id),
                                 onClick = { if (isSelectionMode) viewModel.toggleSelection(field.id) },
                                 onLongClick = { viewModel.enterSelectionMode(field.id) },
-                                    onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveField(field.id) } }
+                                    onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveField(field.id) } },
+                        onDelete = { confirmDeleteAction = { viewModel.permanentlyDeleteSingle(field.id) } }
                                 )
                             }
                         }
@@ -204,6 +212,23 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
     }
 }
 
+        if (confirmDeleteAction != null) {
+            AlertDialog(
+                onDismissRequest = { confirmDeleteAction = null },
+                title = { Text(stringResource(R.string.delete_permanently_confirm_title)) },
+                text = { Text(stringResource(R.string.delete_permanently_confirm_text)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        confirmDeleteAction?.invoke()
+                        confirmDeleteAction = null
+                    }) { Text(stringResource(R.string.delete_permanently)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { confirmDeleteAction = null }) { Text(stringResource(R.string.cancel)) }
+                }
+            )
+        }
+
 @Composable
 private fun ArchivedRow(
     title: String,
@@ -216,7 +241,8 @@ private fun ArchivedRow(
     isSelected: Boolean = false,
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = {},
-    onUnarchive: () -> Unit
+    onUnarchive: () -> Unit,
+    onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -284,6 +310,9 @@ private fun ArchivedRow(
             } else {
                 IconButton(onClick = onUnarchive) {
                     Icon(Icons.Default.Unarchive, contentDescription = "Arşivden çıkar")
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.DeleteForever, contentDescription = stringResource(R.string.delete_permanently), tint = MaterialTheme.colorScheme.error)
                 }
             }
         }
