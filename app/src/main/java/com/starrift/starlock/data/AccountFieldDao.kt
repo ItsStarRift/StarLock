@@ -66,6 +66,9 @@ interface AccountFieldDao {
     @Update
     suspend fun updateField(field: AccountField)
 
+    @Update
+    suspend fun updateFields(fields: List<AccountField>)
+
     @Delete
     suspend fun deleteField(field: AccountField)
 

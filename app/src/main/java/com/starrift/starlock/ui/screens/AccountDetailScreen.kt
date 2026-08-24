@@ -10,6 +10,12 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.draw.graphicsLayer
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
@@ -40,7 +46,7 @@ fun AccountDetailScreen(
 ) {
     val fields by viewModel.fields.collectAsState()
     val selectedIds by viewModel.selectedIds.collectAsState()
-    val selectionMode = selectedIds.isNotEmpty()
+    val selectionMode by viewModel.isSelectionMode.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
@@ -51,7 +57,7 @@ fun AccountDetailScreen(
                 TopAppBar(
                     title = { Text(stringResource(R.string.field_selected_count, selectedIds.size)) },
                     navigationIcon = {
-                        IconButton(onClick = { viewModel.clearSelection() }) {
+                        IconButton(onClick = { viewModel.exitSelectionMode() }) {
                             Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_close))
                         }
                     },
@@ -94,16 +100,44 @@ fun AccountDetailScreen(
                 Text(stringResource(R.string.detail_empty), style = MaterialTheme.typography.bodyLarge)
             }
         } else {
+            var draggedFields by remember(fields) { mutableStateOf(fields) }
+            var draggingIndex by remember { mutableStateOf<Int?>(null) }
+
             LazyColumn(
                 contentPadding = padding,
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(fields, key = { it.id }) { field ->
+                itemsIndexed(draggedFields, key = { _, field -> field.id }) { index, field ->
                     FieldItemCard(
                         field = field,
                         selectionMode = selectionMode,
                         isSelected = field.id in selectedIds,
-                        onToggleSelect = { viewModel.toggleSelect(field.id) }
+                        isDragging = draggingIndex == index,
+                        onToggleSelect = { viewModel.toggleSelect(field.id) },
+                        onDragStart = {
+                            if (!selectionMode) {
+                                viewModel.enterSelectionMode()
+                                viewModel.toggleSelect(field.id)
+                            }
+                            draggingIndex = index
+                        },
+                        onDragMove = { deltaY ->
+                            val currentIndex = draggingIndex ?: return@FieldItemCard
+                            val itemHeightPx = 88f
+                            val targetIndex = (currentIndex + (deltaY / itemHeightPx).toInt())
+                                .coerceIn(0, draggedFields.size - 1)
+                            if (targetIndex != currentIndex) {
+                                val mutable = draggedFields.toMutableList()
+                                val moved = mutable.removeAt(currentIndex)
+                                mutable.add(targetIndex, moved)
+                                draggedFields = mutable
+                                draggingIndex = targetIndex
+                            }
+                        },
+                        onDragEnd = {
+                            draggingIndex = null
+                            viewModel.commitFieldOrder(draggedFields)
+                        }
                     )
                 }
             }
@@ -160,20 +194,45 @@ fun FieldItemCard(
     field: AccountField,
     selectionMode: Boolean,
     isSelected: Boolean,
-    onToggleSelect: () -> Unit
+    isDragging: Boolean,
+    onToggleSelect: () -> Unit,
+    onDragStart: () -> Unit,
+    onDragMove: (Float) -> Unit,
+    onDragEnd: () -> Unit
 ) {
     val context = LocalContext.current
     var isPasswordVisible by remember { mutableStateOf(false) }
     val isPassword = field.label.contains("Şifre", ignoreCase = true) || field.label.contains("Password", ignoreCase = true)
 
+    val scale by animateFloatAsState(
+        targetValue = if (isDragging) 1.04f else 1f,
+        animationSpec = tween(150),
+        label = "fieldDragScale"
+    )
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .combinedClickable(
                 onClick = { if (selectionMode) onToggleSelect() },
-                onLongClick = { if (!selectionMode) onToggleSelect() }
-            ),
+                onLongClick = {}
+            )
+            .pointerInput(selectionMode) {
+                detectDragGesturesAfterLongPress(
+                    onDragStart = { onDragStart() },
+                    onDragEnd = { onDragEnd() },
+                    onDragCancel = { onDragEnd() },
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        onDragMove(dragAmount.y)
+                    }
+                )
+            },
         colors = if (isSelected) CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer) else CardDefaults.cardColors(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isDragging) 8.dp else 2.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),

@@ -41,6 +41,18 @@ class AccountDetailViewModel(
         }
     }
 
+
+    private val _isSelectionMode = MutableStateFlow(false)
+    val isSelectionMode: StateFlow<Boolean> = _isSelectionMode
+
+    fun enterSelectionMode() {
+        _isSelectionMode.value = true
+    }
+
+    fun exitSelectionMode() {
+        _isSelectionMode.value = false
+        _selectedIds.value = emptySet()
+    }
     private val _selectedIds = MutableStateFlow<Set<Long>>(emptySet())
     val selectedIds: StateFlow<Set<Long>> = _selectedIds
 
@@ -79,6 +91,13 @@ class AccountDetailViewModel(
                 current.copy(label = label.trim(), value = value.trim(), isCustomLabel = isCustomLabel)
             )
             _selectedIds.value = emptySet()
+        }
+    }
+
+    fun commitFieldOrder(newOrder: List<AccountField>) {
+        val reindexed = newOrder.mapIndexed { index, field -> field.copy(orderIndex = index) }
+        viewModelScope.launch {
+            repository.updateFieldsOrder(reindexed)
         }
     }
 }
