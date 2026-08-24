@@ -210,27 +210,31 @@ fun FieldItemCard(
         label = "fieldDragScale"
     )
 
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .combinedClickable(
-                onClick = { if (selectionMode) onToggleSelect() },
-                onLongClick = {}
+    val cardModifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 16.dp, vertical = 8.dp)
+        .graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+        }
+        .combinedClickable(
+            onClick = { if (selectionMode) onToggleSelect() },
+            onLongClick = {}
+        )
+        .pointerInput(selectionMode) {
+            detectDragGesturesAfterLongPress(
+                onDragStart = { onDragStart() },
+                onDragEnd = { onDragEnd() },
+                onDragCancel = { onDragEnd() },
+                onDrag = { change: androidx.compose.ui.input.pointer.PointerInputChange, dragAmount: androidx.compose.ui.geometry.Offset ->
+                    change.consume()
+                    onDragMove(dragAmount.y)
+                }
             )
-            .pointerInput(selectionMode) {
-                detectDragGesturesAfterLongPress(
-                    onDragStart = { onDragStart() },
-                    onDragEnd = { onDragEnd() },
-                    onDragCancel = { onDragEnd() },
-                    onDrag = { change, dragAmount ->
-                        change.consume()
-                        onDragMove(dragAmount.y)
-                    }
-                )
-            },
+        }
+
+    Card(
+        modifier = cardModifier,
         colors = if (isSelected) CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer) else CardDefaults.cardColors(),
         elevation = CardDefaults.cardElevation(defaultElevation = if (isDragging) 8.dp else 2.dp)
     ) {
