@@ -127,6 +127,7 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                                     subtitle = "${account.appName} • ${formatArchivedAt(account.archivedAt)}",
                         iconPath = account.iconPath,
                         isAccount = true,
+                isApp = false,
                                     onUnarchive = { confirmUnarchiveAction = { viewModel.unarchiveAccount(account.id) } }
                                 )
                             }

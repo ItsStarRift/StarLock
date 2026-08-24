@@ -138,6 +138,7 @@ fun TrashScreen(viewModel: TrashViewModel, onBackClick: () -> Unit) {
                             title = account.name,
                             subtitle = "${account.appName} • ${formatDeletedAt(account.deletedAt)}",
                             iconPath = account.iconPath,
+                        isApp = false,
                             isAccount = true,
                             isSelectionMode = isSelectionMode,
                             isSelected = selectedIds.contains(account.id),

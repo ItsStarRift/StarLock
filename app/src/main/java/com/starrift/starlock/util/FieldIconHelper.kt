@@ -9,11 +9,11 @@ import androidx.compose.material.icons.filled.PhoneInTalk
 import androidx.compose.ui.graphics.vector.ImageVector
 
 fun fieldIconFor(label: String): ImageVector {
-    return when (label) {
-        "Telefon Numarası", "Phone Number" -> Icons.Default.PhoneInTalk
-        "E-posta", "Email" -> Icons.Default.Mail
-        "Kullanıcı Adı", "Username" -> Icons.Default.Person
-        "Şifre", "Password" -> Icons.Default.Password
+    return when (label.trim().lowercase()) {
+        "telefon numarası", "phone number" -> Icons.Default.PhoneInTalk
+        "e-posta", "email" -> Icons.Default.Mail
+        "kullanıcı adı", "username" -> Icons.Default.Person
+        "şifre", "password" -> Icons.Default.Password
         else -> Icons.Default.Label
     }
 }
