@@ -59,6 +59,7 @@ fun AccountListScreen(
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
     var confirmDeleteAccountsAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    var confirmArchiveAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     val selectedAllFavorite = remember(selectedIds, accounts) {
         selectedIds.isNotEmpty() && accounts.filter { it.id in selectedIds }.all { it.isFavorite }
@@ -129,9 +130,11 @@ fun AccountListScreen(
                         }
                     },
                     onArchive = {
+                            confirmArchiveAction = {
                         val ids = selectedIds
                         ids.forEach { viewModel.archiveAccount(setOf(it)) }
                         selectedIds = emptySet()
+                            }
                     },
                     onEdit = { showEditDialog = true },
                     onToggleFavorite = {
@@ -241,6 +244,23 @@ fun AccountListScreen(
             }
         )
     }
+
+        if (confirmArchiveAction != null) {
+            AlertDialog(
+                onDismissRequest = { confirmArchiveAction = null },
+                title = { Text(stringResource(R.string.archive_confirm_title)) },
+                text = { Text(stringResource(R.string.archive_confirm_text)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        confirmArchiveAction?.invoke()
+                        confirmArchiveAction = null
+                    }) { Text(stringResource(R.string.archive)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { confirmArchiveAction = null }) { Text(stringResource(R.string.cancel)) }
+                }
+            )
+        }
 }
 
 @OptIn(ExperimentalFoundationApi::class)

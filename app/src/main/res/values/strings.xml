@@ -115,6 +115,8 @@
     <string name="restore_confirm_text">Bu öğe eski konumuna geri yüklenecek.</string>
     <string name="delete_permanently_confirm_title">Kalıcı Olarak Sil?</string>
     <string name="delete_permanently_confirm_text">Bu öğe kalıcı olarak silinecek. Bu işlem geri alınamaz.</string>
+    <string name="archive_confirm_title">Arşive Taşınsın mı?</string>
+    <string name="archive_confirm_text">Bu öğe arşive taşınacak.</string>
     <string name="trash_selected_count">%1$d seçildi</string>
     <string name="restore">Geri Getir</string>
     <string name="delete_permanently">Kalıcı Olarak Sil</string>

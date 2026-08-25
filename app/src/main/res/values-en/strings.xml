@@ -58,6 +58,8 @@
     <string name="restore_confirm_text">This item will be restored to its original location.</string>
     <string name="delete_permanently_confirm_title">Delete Permanently?</string>
     <string name="delete_permanently_confirm_text">This item will be permanently deleted. This action cannot be undone.</string>
+    <string name="archive_confirm_title">Move to Archive?</string>
+    <string name="archive_confirm_text">This item will be moved to the archive.</string>
     <string name="delete_confirm">Delete</string>
     <string name="nav_apps">Apps</string>
     <string name="cd_back">Back</string>

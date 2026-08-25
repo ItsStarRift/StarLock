@@ -67,6 +67,7 @@ fun HomeScreen(
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedTab by rememberSaveable { mutableStateOf(BottomTab.UYGULAMALAR) }
     var confirmDeleteAppsAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+        var confirmArchiveAction by remember { mutableStateOf<(() -> Unit)?>(null) }
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
 
     val allAppsFlat = remember(groups, favoriteApps) { favoriteApps + groups.flatMap { it.second } }
@@ -166,9 +167,11 @@ fun HomeScreen(
                                     }
                                 },
                 onArchive = {
+                            confirmArchiveAction = {
                     val ids = selectedIds
                     ids.forEach { viewModel.archiveApp(setOf(it)) }
                     selectedIds = emptySet()
+                            }
                 },
                                 onEdit = { showEditDialog = true },
                                 onToggleFavorite = {
@@ -255,6 +258,23 @@ fun HomeScreen(
             }
         )
     }
+
+        if (confirmArchiveAction != null) {
+            AlertDialog(
+                onDismissRequest = { confirmArchiveAction = null },
+                title = { Text(stringResource(R.string.archive_confirm_title)) },
+                text = { Text(stringResource(R.string.archive_confirm_text)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        confirmArchiveAction?.invoke()
+                        confirmArchiveAction = null
+                    }) { Text(stringResource(R.string.archive)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { confirmArchiveAction = null }) { Text(stringResource(R.string.cancel)) }
+                }
+            )
+        }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
