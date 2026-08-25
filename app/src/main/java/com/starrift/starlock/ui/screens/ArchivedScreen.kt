@@ -210,7 +210,6 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
             }
         )
     }
-}
 
         if (confirmDeleteAction != null) {
             AlertDialog(
@@ -228,6 +227,7 @@ fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
                 }
             )
         }
+    }
 
 @Composable
 private fun ArchivedRow(
