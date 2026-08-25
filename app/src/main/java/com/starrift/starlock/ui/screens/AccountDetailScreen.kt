@@ -47,6 +47,7 @@ fun AccountDetailScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showArchiveConfirm by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -65,7 +66,7 @@ fun AccountDetailScreen(
                         ) {
                             Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit))
                         }
-                        IconButton(onClick = { viewModel.archiveSelectedFields() }) {
+                        IconButton(onClick = { showArchiveConfirm = true }) {
                             Icon(Icons.Default.Archive, contentDescription = stringResource(R.string.cd_archive_field))
                         }
                         IconButton(onClick = { showDeleteConfirm = true }) {
@@ -156,6 +157,23 @@ fun AccountDetailScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) }
+                }
+            )
+        }
+
+        if (showArchiveConfirm) {
+            AlertDialog(
+                onDismissRequest = { showArchiveConfirm = false },
+                title = { Text(stringResource(R.string.archive_confirm_title)) },
+                text = { Text(stringResource(R.string.archive_confirm_text)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.archiveSelectedFields()
+                        showArchiveConfirm = false
+                    }) { Text(stringResource(R.string.archive)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showArchiveConfirm = false }) { Text(stringResource(R.string.cancel)) }
                 }
             )
         }
