@@ -346,10 +346,8 @@ private fun SelectionBar(
                 contentDescription = stringResource(R.string.favorite)
             )
         }
-        if (count == 1) {
-            IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
-            }
+        IconButton(onClick = onEdit, enabled = count == 1) {
+            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
         }
         IconButton(onClick = onArchive) {
             Icon(Icons.Default.Archive, contentDescription = "Arşivle")
