@@ -87,6 +87,7 @@ class AccountDetailViewModel(
             val ids = _selectedIds.value
             ids.forEach { repository.archiveField(it) }
             _selectedIds.value = emptySet()
+            _isSelectionMode.value = false
         }
     }
 
@@ -95,6 +96,7 @@ class AccountDetailViewModel(
             val ids = _selectedIds.value
             ids.forEach { repository.softDeleteField(it) }
             _selectedIds.value = emptySet()
+            _isSelectionMode.value = false
         }
     }
 
