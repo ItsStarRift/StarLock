@@ -95,6 +95,7 @@ class MainActivity : ComponentActivity() {
                         AppRoot(
                     repository = repository,
                     pinManager = pinManager,
+                    sortPreferenceManager = sortPreferenceManager,
                     themeMode = themeMode,
                     onThemeChange = { newMode ->
                         themeMode = newMode
@@ -116,7 +117,7 @@ class MainActivity : ComponentActivity() {
 private const val TRANSITION_DURATION = 320
 
 @Composable
-private fun AppRoot(repository: AppRepository, pinManager: PinManager, themeMode: String, onThemeChange: (String) -> Unit) {
+private fun AppRoot(repository: AppRepository, pinManager: PinManager, sortPreferenceManager: com.starrift.starlock.util.SortPreferenceManager, themeMode: String, onThemeChange: (String) -> Unit) {
     val navController = rememberNavController()
 
     NavHost(

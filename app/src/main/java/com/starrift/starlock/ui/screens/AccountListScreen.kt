@@ -162,6 +162,7 @@ fun AccountListScreen(
                         groupedAccounts = listOf(com.starrift.starlock.data.SortGroupKey.Letter(' ') to searchResults),
                         query = query,
                         showHeaders = false,
+                        selectedIds = selectedIds,
                     onAccountClick = { id ->
                         viewModel.onSearchActiveChange(false)
                         onAccountClick(id)
