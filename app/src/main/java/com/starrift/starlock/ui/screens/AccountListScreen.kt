@@ -173,6 +173,7 @@ fun AccountListScreen(
                     onEnterSelection = { id -> selectedIds = setOf(id) }
                 )
             } else {
+                Column(modifier = Modifier.fillMaxSize()) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -183,6 +184,7 @@ fun AccountListScreen(
                     }
                 }
                 AnimatedContent(
+                    modifier = Modifier.weight(1f),
                     targetState = accounts.isEmpty(),
                     transitionSpec = {
                         fadeIn(animationSpec = tween(250)) togetherWith fadeOut(animationSpec = tween(150))
@@ -212,6 +214,7 @@ fun AccountListScreen(
                     }
                 }
             }
+                }
         }
 
         if (showAddDialog) {
