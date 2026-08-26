@@ -173,6 +173,15 @@ fun AccountListScreen(
                     onEnterSelection = { id -> selectedIds = setOf(id) }
                 )
             } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(onClick = { showSortDialog = true }) {
+                        Icon(Icons.Filled.FilterList, contentDescription = stringResource(R.string.cd_sort))
+                    }
+                }
                 AnimatedContent(
                     targetState = accounts.isEmpty(),
                     transitionSpec = {
