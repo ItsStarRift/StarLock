@@ -278,6 +278,7 @@ fun HomeScreen(
                     TextButton(onClick = { confirmArchiveAction = null }) { Text(stringResource(R.string.cancel)) }
                 }
             )
+        }
 
     if (showSortDialog) {
         SortOptionDialog(
@@ -286,7 +287,6 @@ fun HomeScreen(
             onDismiss = { showSortDialog = false }
         )
     }
-        }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
