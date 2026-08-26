@@ -157,11 +157,11 @@ fun AccountListScreen(
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             if (isSearchActive && selectedIds.isEmpty()) {
-                SelectableAccountList(
-                    favoriteAccounts = emptyList(),
-                    accounts = searchResults,
-                    query = query,
-                    selectedIds = selectedIds,
+                    SelectableAccountList(
+                        favoriteAccounts = emptyList(),
+                        groupedAccounts = listOf(com.starrift.starlock.data.SortGroupKey.Letter(' ') to searchResults),
+                        query = query,
+                        showHeaders = false,
                     onAccountClick = { id ->
                         viewModel.onSearchActiveChange(false)
                         onAccountClick(id)
@@ -305,6 +305,7 @@ private fun SelectableAccountList(
     favoriteAccounts: List<AccountItem>,
     groupedAccounts: List<Pair<com.starrift.starlock.data.SortGroupKey, List<AccountItem>>>,
     query: String,
+    showHeaders: Boolean = true,
     selectedIds: Set<Long>,
     onAccountClick: (Long) -> Unit,
     onToggleSelect: (Long) -> Unit,
@@ -339,6 +340,7 @@ private fun SelectableAccountList(
             }
         }
         groupedAccounts.forEach { (groupKey, groupItems) ->
+            if (showHeaders) {
             item {
                 Text(
                     text = formatAccountSortGroupHeader(groupKey),
@@ -346,6 +348,7 @@ private fun SelectableAccountList(
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 8.dp, top = 12.dp, bottom = 4.dp)
                 )
+            }
             }
             items(groupItems, key = { it.id }) { account ->
                 AccountRow(
