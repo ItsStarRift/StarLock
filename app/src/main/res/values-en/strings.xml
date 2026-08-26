@@ -108,6 +108,14 @@
     <string name="edit_app_title">Edit App</string>
     <string name="edit_account_title">Edit Account</string>
     <string name="favorites_header">Favorites</string>
+    <string name="sort_title">Sort</string>
+    <string name="sort_alpha_asc">Alphabetical (A-Z)</string>
+    <string name="sort_alpha_desc">Alphabetical (Z-A)</string>
+    <string name="sort_last_updated">Recently updated</string>
+    <string name="sort_date_today">Today</string>
+    <string name="sort_date_yesterday">Yesterday</string>
+    <string name="cd_sort">Sort</string>
+    <string name="action_ok">OK</string>
     <string name="favorite">Favorite</string>
     <string name="filter_all">All</string>
     <string name="filter_apps">Apps</string>

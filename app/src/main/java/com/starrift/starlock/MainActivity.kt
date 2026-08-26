@@ -73,6 +73,7 @@ class MainActivity : ComponentActivity() {
 
         val database = AppDatabase.getInstance(applicationContext)
         val repository = AppRepository(database)
+        val sortPreferenceManager = com.starrift.starlock.util.SortPreferenceManager(applicationContext)
         
         val pinManager = PinManager(applicationContext)
 
@@ -133,7 +134,7 @@ private fun AppRoot(repository: AppRepository, pinManager: PinManager, themeMode
                 fadeIn(tween(TRANSITION_DURATION))
             }
         ) {
-            val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(repository))
+            val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(repository, sortPreferenceManager))
             val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(repository))
             HomeScreen(
                 viewModel = homeViewModel,
@@ -160,7 +161,7 @@ private fun AppRoot(repository: AppRepository, pinManager: PinManager, themeMode
         ) { backStackEntry ->
             val appId = backStackEntry.arguments?.getLong("appId") ?: 0L
             val accountListViewModel: AccountListViewModel = viewModel(
-                factory = AccountListViewModelFactory(repository, appId)
+                factory = AccountListViewModelFactory(repository, appId, sortPreferenceManager)
             )
             AccountListScreen(
                 viewModel = accountListViewModel,

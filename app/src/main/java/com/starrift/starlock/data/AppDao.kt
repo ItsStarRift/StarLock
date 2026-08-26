@@ -13,7 +13,8 @@ data class AppWithAccountCount(
     val category: AppCategory,
     val iconPath: String?,
     val accountCount: Int,
-    val isFavorite: Boolean
+    val isFavorite: Boolean,
+    val updatedAt: Long
 )
 
 @Dao
@@ -23,10 +24,9 @@ interface AppDao {
         """
         SELECT apps.id AS id, apps.name AS name, apps.category AS category, apps.iconPath AS iconPath,
                (SELECT COUNT(*) FROM accounts WHERE accounts.appId = apps.id AND accounts.isDeleted = 0) AS accountCount,
-                apps.isFavorite AS isFavorite
+                apps.isFavorite AS isFavorite, apps.updatedAt AS updatedAt
         FROM apps
         WHERE apps.isDeleted = 0 AND apps.isArchived = 0
-        ORDER BY apps.name COLLATE NOCASE ASC
         """
     )
     fun getAllAppsWithCount(): Flow<List<AppWithAccountCount>>

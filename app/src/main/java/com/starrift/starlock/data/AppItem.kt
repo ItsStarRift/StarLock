@@ -15,6 +15,7 @@ data class AppItem(
     /** Cihazdaki dahili depolamada saklanan ikon dosyasının tam yolu, yoksa null. */
     val iconPath: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
     val isFavorite: Boolean = false,
     val isDeleted: Boolean = false,
     val deletedAt: Long? = null,

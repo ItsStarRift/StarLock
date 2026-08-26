@@ -59,12 +59,14 @@ fun HomeScreen(
     val groups by viewModel.alphabeticalGroups.collectAsState()
     val favoriteApps by viewModel.favoriteApps.collectAsState()
     val categoryFilter by viewModel.categoryFilter.collectAsState()
+    val sortOption by viewModel.sortOption.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
     val query by viewModel.searchQuery.collectAsState()
     val isSearchActive by viewModel.isSearchActive.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
+    var showSortDialog by remember { mutableStateOf(false) }
     var selectedTab by rememberSaveable { mutableStateOf(BottomTab.UYGULAMALAR) }
     var confirmDeleteAppsAction by remember { mutableStateOf<(() -> Unit)?>(null) }
         var confirmArchiveAction by remember { mutableStateOf<(() -> Unit)?>(null) }
@@ -139,7 +141,8 @@ fun HomeScreen(
                             if (!isSearchActive) {
                                 CategoryFilterRow(
                                     selected = categoryFilter,
-                                    onSelect = viewModel::onCategoryFilterChange
+                        onSelect = viewModel::onCategoryFilterChange,
+                        onSortClick = { showSortDialog = true }
                                 )
                                 AppGroupedList(
                                     groups = groups,
@@ -274,6 +277,14 @@ fun HomeScreen(
                     TextButton(onClick = { confirmArchiveAction = null }) { Text(stringResource(R.string.cancel)) }
                 }
             )
+
+    if (showSortDialog) {
+        SortOptionDialog(
+            current = sortOption,
+            onSelect = viewModel::onSortOptionChange,
+            onDismiss = { showSortDialog = false }
+        )
+    }
         }
 }
 
@@ -281,33 +292,46 @@ fun HomeScreen(
 @Composable
 private fun CategoryFilterRow(
     selected: CategoryFilter,
-    onSelect: (CategoryFilter) -> Unit
+    onSelect: (CategoryFilter) -> Unit,
+    onSortClick: () -> Unit
 ) {
-    SingleChoiceSegmentedButtonRow(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        SegmentedButton(
-            selected = selected == CategoryFilter.ALL,
-            onClick = { onSelect(CategoryFilter.ALL) },
-            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
+        SingleChoiceSegmentedButtonRow(
+            modifier = Modifier.weight(1f)
         ) {
-            Text(stringResource(R.string.filter_all))
+            SegmentedButton(
+                selected = selected == CategoryFilter.ALL,
+                onClick = { onSelect(CategoryFilter.ALL) },
+                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
+            ) {
+                Text(stringResource(R.string.filter_all))
+            }
+            SegmentedButton(
+                selected = selected == CategoryFilter.APPS,
+                onClick = { onSelect(CategoryFilter.APPS) },
+                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
+            ) {
+                Text(stringResource(R.string.filter_apps))
+            }
+            SegmentedButton(
+                selected = selected == CategoryFilter.GAMES,
+                onClick = { onSelect(CategoryFilter.GAMES) },
+                shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
+            ) {
+                Text(stringResource(R.string.filter_games))
+            }
         }
-        SegmentedButton(
-            selected = selected == CategoryFilter.APPS,
-            onClick = { onSelect(CategoryFilter.APPS) },
-            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
-        ) {
-            Text(stringResource(R.string.filter_apps))
-        }
-        SegmentedButton(
-            selected = selected == CategoryFilter.GAMES,
-            onClick = { onSelect(CategoryFilter.GAMES) },
-            shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
-        ) {
-            Text(stringResource(R.string.filter_games))
+        Spacer(modifier = Modifier.width(8.dp))
+        IconButton(onClick = onSortClick) {
+            Icon(
+                Icons.Filled.FilterList,
+                contentDescription = stringResource(R.string.cd_sort)
+            )
         }
     }
 }
@@ -360,8 +384,70 @@ private fun SelectionBar(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
+fun SortOptionDialog(
+    current: com.starrift.starlock.data.SortOption,
+    onSelect: (com.starrift.starlock.data.SortOption) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.sort_title)) },
+        text = {
+            Column {
+                val options = listOf(
+                    com.starrift.starlock.data.SortOption.ALPHA_ASC to stringResource(R.string.sort_alpha_asc),
+                    com.starrift.starlock.data.SortOption.ALPHA_DESC to stringResource(R.string.sort_alpha_desc),
+                    com.starrift.starlock.data.SortOption.LAST_UPDATED to stringResource(R.string.sort_last_updated)
+                )
+                options.forEach { (option, label) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(option); onDismiss() }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = current == option, onClick = { onSelect(option); onDismiss() })
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(label)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_ok)) }
+        }
+    )
+}
+
+@Composable
+private fun formatSortGroupHeader(key: com.starrift.starlock.data.SortGroupKey): String {
+    return when (key) {
+        is com.starrift.starlock.data.SortGroupKey.Letter -> key.char.toString()
+        is com.starrift.starlock.data.SortGroupKey.DateGroup -> {
+            val zone = java.time.ZoneId.systemDefault()
+            val today = java.time.LocalDate.now(zone).toEpochDay()
+            val date = java.time.LocalDate.ofEpochDay(key.epochDay)
+            when {
+                key.itemCount == 1 && key.singleUpdatedAtMillis != null -> {
+                    val instant = java.time.Instant.ofEpochMilli(key.singleUpdatedAtMillis)
+                    val zdt = instant.atZone(zone)
+                    val datePart = zdt.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                    val timePart = zdt.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+                    val offset = zdt.format(java.time.format.DateTimeFormatter.ofPattern("xxx"))
+                    "$datePart $timePart (UTC$offset)"
+                }
+                key.epochDay == today -> stringResource(R.string.sort_date_today)
+                key.epochDay == today - 1 -> stringResource(R.string.sort_date_yesterday)
+                else -> date.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+            }
+        }
+    }
+}
+
+@Composable
 private fun AppGroupedList(
-    groups: List<Pair<Char, List<AppWithAccountCount>>>,
+    groups: List<Pair<com.starrift.starlock.data.SortGroupKey, List<AppWithAccountCount>>>,
     favoriteApps: List<AppWithAccountCount>,
     onAppClick: (Long) -> Unit,
     selectedIds: Set<Long>,
@@ -408,10 +494,10 @@ private fun AppGroupedList(
                 Spacer(Modifier.height(8.dp))
             }
         }
-        groups.forEach { (letter, apps) ->
+        groups.forEach { (groupKey, apps) ->
             item {
                 Text(
-                    text = letter.toString(),
+                    text = formatSortGroupHeader(groupKey),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 8.dp, top = 12.dp, bottom = 4.dp)

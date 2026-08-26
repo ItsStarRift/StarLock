@@ -6,6 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.starrift.starlock.data.AccountItem
 import com.starrift.starlock.data.AppItem
 import com.starrift.starlock.data.AppRepository
+import com.starrift.starlock.data.SortGroupKey
+import com.starrift.starlock.data.SortOption
+import com.starrift.starlock.util.SortPreferenceManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -13,10 +16,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
 
 class AccountListViewModel(
     private val repository: AppRepository,
-    private val appId: Long
+    private val appId: Long,
+    private val sortPreferenceManager: SortPreferenceManager
 ) : ViewModel() {
 
     val app: StateFlow<AppItem?> =
@@ -29,14 +35,22 @@ class AccountListViewModel(
 
     val accounts: StateFlow<List<AccountItem>> = allAccounts
 
+    private val _sortOption = MutableStateFlow(sortPreferenceManager.getAccountSortOption())
+    val sortOption: StateFlow<SortOption> = _sortOption
+
+    fun onSortOptionChange(option: SortOption) {
+        _sortOption.value = option
+        sortPreferenceManager.setAccountSortOption(option)
+    }
+
     val favoriteAccounts: StateFlow<List<AccountItem>> =
-        allAccounts.map { list ->
-            list.filter { it.isFavorite }.sortedBy { it.name.lowercase() }
+        allAccounts.combine(_sortOption) { list, sort ->
+            sortFlatList(list.filter { it.isFavorite }, sort)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val nonFavoriteAccounts: StateFlow<List<AccountItem>> =
-        allAccounts.map { list ->
-            list.filter { !it.isFavorite }
+    val groupedAccounts: StateFlow<List<Pair<SortGroupKey, List<AccountItem>>>> =
+        allAccounts.combine(_sortOption) { list, sort ->
+            groupNonFavorites(list.filter { !it.isFavorite }, sort)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _searchQuery = MutableStateFlow("")
@@ -75,7 +89,13 @@ class AccountListViewModel(
                     appId = appId,
                     name = name,
                     iconPath = iconPath,
-                    isFavorite = existing?.isFavorite ?: false
+                    createdAt = existing?.createdAt ?: System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis(),
+                    isFavorite = existing?.isFavorite ?: false,
+                    isDeleted = existing?.isDeleted ?: false,
+                    deletedAt = existing?.deletedAt,
+                    isArchived = existing?.isArchived ?: false,
+                    archivedAt = existing?.archivedAt
                 )
             )
         }
@@ -98,16 +118,56 @@ class AccountListViewModel(
             accountIds.forEach { id -> repository.setAccountFavorite(id, makeFavorite) }
         }
     }
+
+    private fun sortFlatList(list: List<AccountItem>, sort: SortOption): List<AccountItem> = when (sort) {
+        SortOption.ALPHA_ASC -> list.sortedBy { it.name.lowercase() }
+        SortOption.ALPHA_DESC -> list.sortedByDescending { it.name.lowercase() }
+        SortOption.LAST_UPDATED -> list.sortedByDescending { it.updatedAt }
+    }
+
+    private fun groupNonFavorites(
+        list: List<AccountItem>,
+        sort: SortOption
+    ): List<Pair<SortGroupKey, List<AccountItem>>> {
+        return when (sort) {
+            SortOption.ALPHA_ASC -> list
+                .groupBy { it.name.first().uppercaseChar() }
+                .toSortedMap()
+                .map { (letter, items) -> SortGroupKey.Letter(letter) as SortGroupKey to items.sortedBy { it.name.lowercase() } }
+
+            SortOption.ALPHA_DESC -> list
+                .groupBy { it.name.first().uppercaseChar() }
+                .toSortedMap(reverseOrder())
+                .map { (letter, items) -> SortGroupKey.Letter(letter) as SortGroupKey to items.sortedByDescending { it.name.lowercase() } }
+
+            SortOption.LAST_UPDATED -> {
+                val zone = ZoneId.systemDefault()
+                list
+                    .groupBy { Instant.ofEpochMilli(it.updatedAt).atZone(zone).toLocalDate().toEpochDay() }
+                    .toSortedMap(reverseOrder())
+                    .map { (epochDay, items) ->
+                        val sortedItems = items.sortedByDescending { it.updatedAt }
+                        val key = SortGroupKey.DateGroup(
+                            epochDay = epochDay,
+                            itemCount = sortedItems.size,
+                            singleUpdatedAtMillis = if (sortedItems.size == 1) sortedItems.first().updatedAt else null
+                        )
+                        key as SortGroupKey to sortedItems
+                    }
+            }
+        }
+    }
 }
 
 class AccountListViewModelFactory(
     private val repository: AppRepository,
-    private val appId: Long
+    private val appId: Long,
+    private val sortPreferenceManager: SortPreferenceManager
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(AccountListViewModel::class.java)) {
-            return AccountListViewModel(repository, appId) as T
+            return AccountListViewModel(repository, appId, sortPreferenceManager) as T
         }
         throw IllegalArgumentException("Bilinmeyen ViewModel sınıfı: ${modelClass.name}")
     }

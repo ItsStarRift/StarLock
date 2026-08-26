@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -50,13 +51,15 @@ fun AccountListScreen(
     val app by viewModel.app.collectAsState()
     val accounts by viewModel.accounts.collectAsState()
     val favoriteAccounts by viewModel.favoriteAccounts.collectAsState()
-    val nonFavoriteAccounts by viewModel.nonFavoriteAccounts.collectAsState()
+    val groupedAccounts by viewModel.groupedAccounts.collectAsState()
+    val sortOption by viewModel.sortOption.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
     val query by viewModel.searchQuery.collectAsState()
     val isSearchActive by viewModel.isSearchActive.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
+    var showSortDialog by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
     var confirmDeleteAccountsAction by remember { mutableStateOf<(() -> Unit)?>(null) }
     var confirmArchiveAction by remember { mutableStateOf<(() -> Unit)?>(null) }
@@ -187,7 +190,7 @@ fun AccountListScreen(
                     } else {
                         SelectableAccountList(
                             favoriteAccounts = favoriteAccounts,
-                            accounts = nonFavoriteAccounts,
+                            groupedAccounts = groupedAccounts,
                             query = "",
                             selectedIds = selectedIds,
                             onAccountClick = onAccountClick,
@@ -261,13 +264,46 @@ fun AccountListScreen(
                 }
             )
         }
+
+    if (showSortDialog) {
+        SortOptionDialog(
+            current = sortOption,
+            onSelect = viewModel::onSortOptionChange,
+            onDismiss = { showSortDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun formatAccountSortGroupHeader(key: com.starrift.starlock.data.SortGroupKey): String {
+    return when (key) {
+        is com.starrift.starlock.data.SortGroupKey.Letter -> key.char.toString()
+        is com.starrift.starlock.data.SortGroupKey.DateGroup -> {
+            val zone = java.time.ZoneId.systemDefault()
+            val today = java.time.LocalDate.now(zone).toEpochDay()
+            val date = java.time.LocalDate.ofEpochDay(key.epochDay)
+            when {
+                key.itemCount == 1 && key.singleUpdatedAtMillis != null -> {
+                    val instant = java.time.Instant.ofEpochMilli(key.singleUpdatedAtMillis)
+                    val zdt = instant.atZone(zone)
+                    val datePart = zdt.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                    val timePart = zdt.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+                    val offset = zdt.format(java.time.format.DateTimeFormatter.ofPattern("xxx"))
+                    "$datePart $timePart (UTC$offset)"
+                }
+                key.epochDay == today -> stringResource(R.string.sort_date_today)
+                key.epochDay == today - 1 -> stringResource(R.string.sort_date_yesterday)
+                else -> date.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SelectableAccountList(
     favoriteAccounts: List<AccountItem>,
-    accounts: List<AccountItem>,
+    groupedAccounts: List<Pair<com.starrift.starlock.data.SortGroupKey, List<AccountItem>>>,
     query: String,
     selectedIds: Set<Long>,
     onAccountClick: (Long) -> Unit,
@@ -302,18 +338,28 @@ private fun SelectableAccountList(
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
-        items(accounts, key = { it.id }) { account ->
-            AccountRow(
-                account = account,
-                query = query,
-                selectionMode = selectionMode,
-                isSelected = account.id in selectedIds,
-                onClick = {
-                    if (selectionMode) onToggleSelect(account.id) else onAccountClick(account.id)
-                },
-                onLongClick = { onEnterSelection(account.id) }
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+        groupedAccounts.forEach { (groupKey, groupItems) ->
+            item {
+                Text(
+                    text = formatAccountSortGroupHeader(groupKey),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 8.dp, top = 12.dp, bottom = 4.dp)
+                )
+            }
+            items(groupItems, key = { it.id }) { account ->
+                AccountRow(
+                    account = account,
+                    query = query,
+                    selectionMode = selectionMode,
+                    isSelected = account.id in selectedIds,
+                    onClick = {
+                        if (selectionMode) onToggleSelect(account.id) else onAccountClick(account.id)
+                    },
+                    onLongClick = { onEnterSelection(account.id) }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         }
         item { Spacer(modifier = Modifier.height(96.dp)) }
     }

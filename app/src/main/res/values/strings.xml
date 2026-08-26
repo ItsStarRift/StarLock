@@ -102,6 +102,14 @@
     <string name="edit_app_title">Uygulama Düzenle</string>
     <string name="edit_account_title">Hesap Düzenle</string>
     <string name="favorites_header">Favoriler</string>
+    <string name="sort_title">Sıralama</string>
+    <string name="sort_alpha_asc">Alfabetik (A-Z)</string>
+    <string name="sort_alpha_desc">Alfabetik (Z-A)</string>
+    <string name="sort_last_updated">En son güncellenenler</string>
+    <string name="sort_date_today">Bugün</string>
+    <string name="sort_date_yesterday">Dün</string>
+    <string name="cd_sort">Sırala</string>
+    <string name="action_ok">Tamam</string>
     <string name="favorite">Favori</string>
     <string name="filter_all">Tümü</string>
     <string name="filter_apps">Uygulamalar</string>
