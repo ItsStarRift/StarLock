@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.starrift.starlock.R
@@ -48,10 +49,10 @@ fun AddFieldDialog(
     }
 
     val initialSelection = remember(existingField) {
-        if (existingField != null && !existingField.isCustomLabel) {
-            presetOptions.find { it.label == existingField.label } ?: presetOptions.last()
-        } else {
-            presetOptions.first()
+        when {
+            existingField == null -> presetOptions.first()
+            existingField.isCustomLabel -> presetOptions.last()
+            else -> presetOptions.find { it.label == existingField.label } ?: presetOptions.last()
         }
     }
 
@@ -131,9 +132,10 @@ fun AddFieldDialog(
                                     }
                                     Text(
                                         text = option.label,
+                        textAlign = TextAlign.Center,
                                         maxLines = 1,
                                         overflow = TextOverflow.Clip,
-                                        modifier = Modifier.basicMarquee()
+                                        modifier = Modifier.fillMaxWidth().basicMarquee()
                                     )
                                 }
                             }
