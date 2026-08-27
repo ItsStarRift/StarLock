@@ -22,7 +22,7 @@ class AccountDetailViewModel(
             initialValue = emptyList()
         )
 
-    fun addField(label: String, value: String, isCustomLabel: Boolean) {
+    fun addField(label: String, value: String, isCustomLabel: Boolean, isCensored: Boolean) {
         viewModelScope.launch {
             val currentSize = fields.value.size
             repository.addField(
@@ -30,7 +30,8 @@ class AccountDetailViewModel(
                 label = label,
                 value = value,
                 isCustomLabel = isCustomLabel,
-                orderIndex = currentSize
+                orderIndex = currentSize,
+                isCensored = isCensored
             )
         }
     }
@@ -100,11 +101,11 @@ class AccountDetailViewModel(
         }
     }
 
-    fun editField(fieldId: Long, label: String, value: String, isCustomLabel: Boolean) {
+    fun editField(fieldId: Long, label: String, value: String, isCustomLabel: Boolean, isCensored: Boolean) {
         viewModelScope.launch {
             val current = fields.value.find { it.id == fieldId } ?: return@launch
             repository.updateField(
-                current.copy(label = label.trim(), value = value.trim(), isCustomLabel = isCustomLabel)
+                current.copy(label = label.trim(), value = value.trim(), isCustomLabel = isCustomLabel, isCensored = isCensored)
             )
             _selectedIds.value = emptySet()
         }

@@ -94,14 +94,15 @@ class AppRepository(private val database: AppDatabase) {
     fun getFieldsForAccount(accountId: Long): Flow<List<AccountField>> =
         database.accountFieldDao().getFieldsForAccount(accountId)
 
-    suspend fun addField(accountId: Long, label: String, value: String, isCustomLabel: Boolean, orderIndex: Int): Long {
+    suspend fun addField(accountId: Long, label: String, value: String, isCustomLabel: Boolean, orderIndex: Int, isCensored: Boolean = false): Long {
         return database.accountFieldDao().insertField(
             AccountField(
                 accountId = accountId,
                 label = label.trim(),
                 value = value.trim(),
                 isCustomLabel = isCustomLabel,
-                orderIndex = orderIndex
+                orderIndex = orderIndex,
+                isCensored = isCensored
             )
         )
     }

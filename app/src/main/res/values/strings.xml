@@ -90,7 +90,12 @@
     <string name="value_label">Değer</string>
     <string name="custom_field_option">Diğer/Özel Terim</string>
     <string name="add_btn">Ekle</string>
-    <string name="preset_email">E-posta</string>
+    <string name="preset_email">E-Mail</string>
+    <string name="preset_recovery_phone">Kurtarma Telefon Numarası</string>
+    <string name="preset_recovery_email">Kurtarma E-Mail</string>
+    <string name="preset_2fa_secret">2FA Gizli Anahtarı</string>
+    <string name="preset_security_question">Güvenlik Sorusu</string>
+    <string name="censor_field_value">Alan değerini gizle</string>
     <string name="back_btn">Geri</string>
     <string name="preset_username">Kullanıcı Adı</string>
     <string name="preset_phone">Telefon Numarası</string>

@@ -121,8 +121,8 @@ fun AccountDetailScreen(
         if (showAddDialog) {
             AddFieldDialog(
                 onDismiss = { showAddDialog = false },
-                onConfirm = { label, value, isCustom ->
-                    viewModel.addField(label, value, isCustom)
+                onConfirm = { label, value, isCustom, isCensored ->
+                    viewModel.addField(label, value, isCustom, isCensored)
                     showAddDialog = false
                 }
             )
@@ -133,8 +133,8 @@ fun AccountDetailScreen(
             if (editingField != null) {
                 AddFieldDialog(
                     onDismiss = { showEditDialog = false },
-                    onConfirm = { label, value, isCustom ->
-                        viewModel.editField(editingField.id, label, value, isCustom)
+                    onConfirm = { label, value, isCustom, isCensored ->
+                viewModel.editField(editingField.id, label, value, isCustom, isCensored)
                         showEditDialog = false
                     },
                     existingField = editingField

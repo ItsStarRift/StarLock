@@ -32,5 +32,6 @@ data class AccountField(
     val isDeleted: Boolean = false,
     val deletedAt: Long? = null,
     val isArchived: Boolean = false,
-    val archivedAt: Long? = null
+    val archivedAt: Long? = null,
+    val isCensored: Boolean = false
 )
