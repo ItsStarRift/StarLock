@@ -194,8 +194,7 @@ fun FieldItemCard(
     onMoveDown: () -> Unit
 ) {
     val context = LocalContext.current
-    var isPasswordVisible by remember { mutableStateOf(false) }
-    val isPassword = field.label.contains("Şifre", ignoreCase = true) || field.label.contains("Password", ignoreCase = true)
+    var isPasswordVisible by remember(field.id) { mutableStateOf(false) }
 
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
@@ -219,7 +218,7 @@ fun FieldItemCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = field.label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.height(4.dp))
-                if (isPassword && !isPasswordVisible) {
+                if (field.isCensored && !isPasswordVisible) {
                     Text(text = "••••••••", style = MaterialTheme.typography.bodyLarge)
                 } else {
                     Text(text = field.value, style = MaterialTheme.typography.bodyLarge)
@@ -234,7 +233,7 @@ fun FieldItemCard(
                 }
                 Checkbox(checked = isSelected, onCheckedChange = { onToggleSelect() })
             } else {
-                if (isPassword) {
+                if (field.isCensored) {
                     IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                         Icon(
                             imageVector = if (isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
