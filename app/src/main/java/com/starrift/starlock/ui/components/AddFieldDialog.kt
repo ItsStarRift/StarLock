@@ -94,7 +94,11 @@ fun AddFieldDialog(
                         if (rowIndex > 0) {
                             HorizontalDivider(color = MaterialTheme.colorScheme.outline)
                         }
-                        Row(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(IntrinsicSize.Min)
+                        ) {
                             rowOptions.forEachIndexed { colIndex, option ->
                                 if (colIndex > 0) {
                                     Box(
