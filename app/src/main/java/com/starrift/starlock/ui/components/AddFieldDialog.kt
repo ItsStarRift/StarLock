@@ -59,11 +59,13 @@ fun AddFieldDialog(
     var isCensored by remember { mutableStateOf(existingField?.isCensored ?: false) }
     var censorManuallySet by remember { mutableStateOf(isEditMode) }
 
+    val passwordLabel = stringResource(R.string.preset_password)
+    val twoFaLabel = stringResource(R.string.preset_2fa_secret)
+
     LaunchedEffect(selectedOption) {
         if (!censorManuallySet) {
             val label = selectedOption.label
-            isCensored = label == stringResource(R.string.preset_password) ||
-                label == stringResource(R.string.preset_2fa_secret)
+            isCensored = label == passwordLabel || label == twoFaLabel
         }
     }
 
