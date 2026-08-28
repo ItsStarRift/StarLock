@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhoneInTalk
+import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /** Sabit preset kimlikleri. AddFieldDialog'daki seçim buradan gelir, label metnine bağımlı değildir. */
@@ -22,7 +23,7 @@ fun fieldIconForPreset(preset: FieldPreset): ImageVector {
         FieldPreset.PASSWORD -> Icons.Default.Password
         FieldPreset.TWO_FA_SECRET -> Icons.Default.Key
         FieldPreset.USERNAME -> Icons.Default.Person
-        FieldPreset.SECURITY_QUESTION -> Icons.Default.Key
+        FieldPreset.SECURITY_QUESTION -> Icons.Default.Quiz
         FieldPreset.CUSTOM -> Icons.Default.Label
     }
 }
@@ -36,7 +37,7 @@ fun fieldIconFor(label: String): ImageVector {
         l.contains("telefon") || l.contains("phone") -> Icons.Default.PhoneInTalk
         l.contains("e-posta") || l.contains("email") || l.contains("e-mail") -> Icons.Default.Mail
         l.contains("kullanıcı adı") || l.contains("username") -> Icons.Default.Person
-        l.contains("güvenlik sorusu") || l.contains("security question") -> Icons.Default.Key
+        l.contains("güvenlik sorusu") || l.contains("security question") -> Icons.Default.Quiz
         l.contains("2fa") || l.contains("gizli anahtar") || l.contains("secret key") -> Icons.Default.Key
         l.contains("şifre") || l.contains("password") -> Icons.Default.Password
         else -> Icons.Default.Label
