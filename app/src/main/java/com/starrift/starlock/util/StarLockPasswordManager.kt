@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 
-class PinManager(context: Context) {
+class StarLockPasswordManager(context: Context) {
 
     private val masterKey = MasterKey.Builder(context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
@@ -28,38 +28,49 @@ class PinManager(context: Context) {
         private const val KEY_LENGTH_BITS = 256
         private const val LOCKOUT_DURATION_MS = 30_000L
         private const val MAX_ATTEMPTS = 5
+        const val MIN_PASSWORD_LENGTH = 6
+        const val MAX_PASSWORD_LENGTH = 16
     }
 
-    fun isPinSet(): Boolean = prefs.contains("pin_hash")
+    fun isPasswordSet(): Boolean = prefs.contains("password_hash")
 
-    fun setPin(pin: String) {
+    fun isFingerprintEnabled(): Boolean = prefs.getBoolean("fingerprint_enabled", false)
+
+    fun setFingerprintEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("fingerprint_enabled", enabled).apply()
+    }
+
+    fun setPassword(password: String): Boolean {
+        if (password.length !in MIN_PASSWORD_LENGTH..MAX_PASSWORD_LENGTH) return false
         val salt = generateSalt()
-        val hash = deriveHash(pin, salt)
+        val hash = deriveHash(password, salt)
         prefs.edit()
-            .putString("pin_hash", hash)
-            .putString("pin_salt", Base64.encodeToString(salt, Base64.NO_WRAP))
+            .putString("password_hash", hash)
+            .putString("password_salt", Base64.encodeToString(salt, Base64.NO_WRAP))
             .putInt("failed_attempts", 0)
             .putLong("lockout_time", 0)
             .apply()
+        return true
     }
 
-    fun removePin() {
+    fun removePassword() {
         prefs.edit()
-            .remove("pin_hash")
-            .remove("pin_salt")
+            .remove("password_hash")
+            .remove("password_salt")
             .remove("failed_attempts")
             .remove("lockout_time")
+            .remove("fingerprint_enabled")
             .apply()
     }
 
-    fun verifyPin(pin: String): Boolean {
+    fun verifyPassword(password: String): Boolean {
         if (isLockoutActive()) return false
 
-        val storedHash = prefs.getString("pin_hash", null) ?: return false
-        val saltString = prefs.getString("pin_salt", null) ?: return false
+        val storedHash = prefs.getString("password_hash", null) ?: return false
+        val saltString = prefs.getString("password_salt", null) ?: return false
         val salt = Base64.decode(saltString, Base64.NO_WRAP)
 
-        val isCorrect = deriveHash(pin, salt) == storedHash
+        val isCorrect = deriveHash(password, salt) == storedHash
 
         if (isCorrect) {
             prefs.edit().putInt("failed_attempts", 0).putLong("lockout_time", 0).apply()
@@ -98,8 +109,8 @@ class PinManager(context: Context) {
         return salt
     }
 
-    private fun deriveHash(pin: String, salt: ByteArray): String {
-        val spec = PBEKeySpec(pin.toCharArray(), salt, ITERATIONS, KEY_LENGTH_BITS)
+    private fun deriveHash(password: String, salt: ByteArray): String {
+        val spec = PBEKeySpec(password.toCharArray(), salt, ITERATIONS, KEY_LENGTH_BITS)
         val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
         val hashBytes = factory.generateSecret(spec).encoded
         return Base64.encodeToString(hashBytes, Base64.NO_WRAP)

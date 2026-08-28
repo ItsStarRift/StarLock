@@ -2,7 +2,7 @@ package com.starrift.starlock
 
 import android.content.Context
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.tween
@@ -48,11 +48,12 @@ import com.starrift.starlock.ui.screens.ArchivedScreen
 import com.starrift.starlock.ui.screens.ArchivedViewModel
 import com.starrift.starlock.ui.screens.ArchivedViewModelFactory
 import com.starrift.starlock.ui.theme.HesapYoneticisiTheme
-import com.starrift.starlock.util.PinManager
+import com.starrift.starlock.util.StarLockPasswordManager
 import com.starrift.starlock.ui.screens.LockScreen
+import com.starrift.starlock.ui.screens.AppLockScreen
 import java.util.Locale
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,7 +76,7 @@ class MainActivity : ComponentActivity() {
         val repository = AppRepository(database)
         val sortPreferenceManager = com.starrift.starlock.util.SortPreferenceManager(applicationContext)
         
-        val pinManager = PinManager(applicationContext)
+        val passwordManager = StarLockPasswordManager(applicationContext)
 
         setContent {
             var themeMode by remember { mutableStateOf(savedTheme) }
@@ -89,12 +90,12 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var isUnlocked by remember { mutableStateOf(!pinManager.isPinSet()) }
+                    var isUnlocked by remember { mutableStateOf(!passwordManager.isPasswordSet()) }
 
                     if (isUnlocked) {
                         AppRoot(
                     repository = repository,
-                    pinManager = pinManager,
+                    passwordManager = passwordManager,
                     sortPreferenceManager = sortPreferenceManager,
                     themeMode = themeMode,
                     onThemeChange = { newMode ->
@@ -104,7 +105,7 @@ class MainActivity : ComponentActivity() {
                 )
                     } else {
                         LockScreen(
-                            pinManager = pinManager,
+                            passwordManager = passwordManager,
                             onUnlocked = { isUnlocked = true }
                         )
                     }
@@ -117,7 +118,7 @@ class MainActivity : ComponentActivity() {
 private const val TRANSITION_DURATION = 320
 
 @Composable
-private fun AppRoot(repository: AppRepository, pinManager: PinManager, sortPreferenceManager: com.starrift.starlock.util.SortPreferenceManager, themeMode: String, onThemeChange: (String) -> Unit) {
+private fun AppRoot(repository: AppRepository, passwordManager: StarLockPasswordManager, sortPreferenceManager: com.starrift.starlock.util.SortPreferenceManager, themeMode: String, onThemeChange: (String) -> Unit) {
     val navController = rememberNavController()
 
     NavHost(
@@ -140,7 +141,7 @@ private fun AppRoot(repository: AppRepository, pinManager: PinManager, sortPrefe
             HomeScreen(
                 viewModel = homeViewModel,
                 onAppClick = { appId -> navController.navigate(Routes.accountList(appId)) },
-                settingsContent = { SettingsScreen(viewModel = settingsViewModel, onTrashClick = { navController.navigate(Routes.TRASH) }, onArchivedClick = { navController.navigate(Routes.ARCHIVED) }, themeMode = themeMode, onThemeChange = onThemeChange) }
+                settingsContent = { SettingsScreen(viewModel = settingsViewModel, onTrashClick = { navController.navigate(Routes.TRASH) }, onArchivedClick = { navController.navigate(Routes.ARCHIVED) }, onAppLockClick = { navController.navigate(Routes.APP_LOCK) }, themeMode = themeMode, onThemeChange = onThemeChange) }
             )
         }
 
@@ -191,8 +192,15 @@ private fun AppRoot(repository: AppRepository, pinManager: PinManager, sortPrefe
             )
         }
 
+        composable(route = Routes.APP_LOCK) {
+            AppLockScreen(
+                passwordManager = passwordManager,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
         composable(route = Routes.TRASH) {
-            var trashUnlocked by remember { mutableStateOf(!pinManager.isPinSet()) }
+            var trashUnlocked by remember { mutableStateOf(!passwordManager.isPasswordSet()) }
             if (trashUnlocked) {
                 val trashViewModel: TrashViewModel = viewModel(factory = TrashViewModelFactory(repository))
                 TrashScreen(
@@ -201,14 +209,14 @@ private fun AppRoot(repository: AppRepository, pinManager: PinManager, sortPrefe
                 )
             } else {
                 LockScreen(
-                    pinManager = pinManager,
+                    passwordManager = passwordManager,
                     onUnlocked = { trashUnlocked = true }
                 )
             }
         }
 
     composable(route = Routes.ARCHIVED) {
-        var archivedUnlocked by remember { mutableStateOf(!pinManager.isPinSet()) }
+        var archivedUnlocked by remember { mutableStateOf(!passwordManager.isPasswordSet()) }
         if (archivedUnlocked) {
             val archivedViewModel: ArchivedViewModel = viewModel(factory = ArchivedViewModelFactory(repository))
             ArchivedScreen(
@@ -217,7 +225,7 @@ private fun AppRoot(repository: AppRepository, pinManager: PinManager, sortPrefe
             )
         } else {
             LockScreen(
-                pinManager = pinManager,
+                passwordManager = passwordManager,
                 onUnlocked = { archivedUnlocked = true }
             )
         }

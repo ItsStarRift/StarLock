@@ -34,7 +34,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import com.starrift.starlock.R
-import com.starrift.starlock.util.PinManager
 
 private const val GITHUB_URL = "https://github.com/ItsStarRift/StarLock"
 private const val FEEDBACK_EMAIL = "omerplt.dev@gmail.com"
@@ -71,11 +70,6 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArc
         else -> stringResource(R.string.lang_system)
     }
 
-    val pinManager = remember { PinManager(context) }
-    var isPinSet by remember { mutableStateOf(pinManager.isPinSet()) }
-    var showPinWarningDialog by remember { mutableStateOf(false) }
-    var showPinCreateDialog by remember { mutableStateOf(false) }
-    var showPinRemoveDialog by remember { mutableStateOf(false) }
 
     val exportSuccessMsg = stringResource(R.string.export_success)
     val exportFailMsg = stringResource(R.string.export_fail)
@@ -118,8 +112,8 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArc
             SettingsRow(
                 icon = Icons.Default.Lock,
                 title = stringResource(R.string.app_lock),
-                subtitle = if (isPinSet) stringResource(R.string.on) else stringResource(R.string.off),
-                onClick = { if (isPinSet) showPinRemoveDialog = true else showPinWarningDialog = true }
+                subtitle = "",
+                onClick = onAppLockClick
             )
             SettingsDivider()
             SettingsRow(
@@ -329,151 +323,6 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArc
         )
     }
 
-    if (showPinWarningDialog) {
-        var riskAccepted by remember { mutableStateOf(false) }
-        AlertDialog(
-            onDismissRequest = { showPinWarningDialog = false },
-            title = { Text(stringResource(R.string.pin_warning_title), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) },
-            text = {
-                Column {
-                    Text(stringResource(R.string.pin_warning_text))
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth().clickable { riskAccepted = !riskAccepted }.padding(vertical = 4.dp)
-                    ) {
-                        Checkbox(checked = riskAccepted, onCheckedChange = { riskAccepted = it })
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.pin_risk_accept), style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = { showPinWarningDialog = false; showPinCreateDialog = true },
-                    enabled = riskAccepted
-                ) { Text(stringResource(R.string.continue_btn)) }
-            },
-            dismissButton = { TextButton(onClick = { showPinWarningDialog = false }) { Text(stringResource(R.string.cancel)) } }
-        )
-    }
-
-    if (showPinCreateDialog) {
-        var pinInput by remember { mutableStateOf("") }
-        var pinConfirm by remember { mutableStateOf("") }
-        var isError by remember { mutableStateOf(false) }
-        val successMsg = stringResource(R.string.pin_success)
-
-        AlertDialog(
-            onDismissRequest = { showPinCreateDialog = false },
-            title = { Text(stringResource(R.string.pin_create_title)) },
-            text = {
-                Column {
-                    OutlinedTextField(
-                        value = pinInput,
-                        onValueChange = { if (it.length <= 4) { pinInput = it; isError = false } },
-                        label = { Text(stringResource(R.string.pin_4_digits)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                        visualTransformation = PasswordVisualTransformation(),
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = pinConfirm,
-                        onValueChange = { if (it.length <= 4) { pinConfirm = it; isError = false } },
-                        label = { Text(stringResource(R.string.pin_repeat)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                        visualTransformation = PasswordVisualTransformation(),
-                        isError = isError,
-                        singleLine = true
-                    )
-                    if (isError) {
-                        Text(
-                            stringResource(R.string.pin_mismatch),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        if (pinInput.length == 4 && pinInput == pinConfirm) {
-                            pinManager.setPin(pinInput)
-                            isPinSet = true
-                            showPinCreateDialog = false
-                            Toast.makeText(context, successMsg, Toast.LENGTH_SHORT).show()
-                        } else {
-                            isError = true
-                        }
-                    }
-                ) { Text(stringResource(R.string.create)) }
-            },
-            dismissButton = { TextButton(onClick = { showPinCreateDialog = false }) { Text(stringResource(R.string.cancel)) } }
-        )
-    }
-
-    if (showPinRemoveDialog) {
-        var currentPin by remember { mutableStateOf("") }
-        var isError by remember { mutableStateOf(false) }
-        var errorMsg by remember { mutableStateOf("") }
-        
-        val removeSuccessMsg = stringResource(R.string.pin_remove_success)
-        val incorrectPinMsg = stringResource(R.string.pin_incorrect)
-        val waitMsgTemplate = stringResource(R.string.pin_too_many_attempts)
-
-        AlertDialog(
-            onDismissRequest = { showPinRemoveDialog = false },
-            title = { Text(stringResource(R.string.pin_remove_title)) },
-            text = {
-                Column {
-                    Text(stringResource(R.string.pin_remove_text))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = currentPin,
-                        onValueChange = { if (it.length <= 4) { currentPin = it; isError = false } },
-                        label = { Text(stringResource(R.string.current_pin)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                        visualTransformation = PasswordVisualTransformation(),
-                        isError = isError,
-                        singleLine = true
-                    )
-                    if (isError) {
-                        Text(
-                            errorMsg,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        if (pinManager.verifyPin(currentPin)) {
-                            pinManager.removePin()
-                            isPinSet = false
-                            showPinRemoveDialog = false
-                            Toast.makeText(context, removeSuccessMsg, Toast.LENGTH_SHORT).show()
-                        } else {
-                            isError = true
-                            val lockout = pinManager.getRemainingLockoutSeconds()
-                            if (lockout > 0) {
-                                errorMsg = waitMsgTemplate.format(lockout)
-                            } else {
-                                errorMsg = incorrectPinMsg
-                            }
-                        }
-                    }
-                ) { Text(stringResource(R.string.remove)) }
-            },
-            dismissButton = { TextButton(onClick = { showPinRemoveDialog = false }) { Text(stringResource(R.string.cancel)) } }
-        )
-    }
-}
 
 @Composable
 private fun SettingsGroup(content: @Composable ColumnScope.() -> Unit) {

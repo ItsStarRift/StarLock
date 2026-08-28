@@ -1,50 +1,69 @@
 package com.starrift.starlock.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Backspace
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.starrift.starlock.util.PinManager
+import androidx.fragment.app.FragmentActivity
+import com.starrift.starlock.util.BiometricHelper
+import com.starrift.starlock.util.StarLockPasswordManager
 import kotlinx.coroutines.delay
 
 @Composable
 fun LockScreen(
-    pinManager: PinManager,
+    passwordManager: StarLockPasswordManager,
     onUnlocked: () -> Unit
 ) {
-    var pin by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val activity = context as? FragmentActivity
+
+    var password by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
-    var remainingLockout by remember { mutableStateOf(pinManager.getRemainingLockoutSeconds()) }
+    var remainingLockout by remember { mutableStateOf(passwordManager.getRemainingLockoutSeconds()) }
+
+    val fingerprintAvailable = remember {
+        passwordManager.isFingerprintEnabled() && BiometricHelper.isBiometricAvailable(context)
+    }
 
     LaunchedEffect(remainingLockout) {
         if (remainingLockout > 0) {
             delay(1000)
-            remainingLockout = pinManager.getRemainingLockoutSeconds()
+            remainingLockout = passwordManager.getRemainingLockoutSeconds()
         }
     }
 
-    LaunchedEffect(pin) {
-        if (pin.length == 4) {
-            if (pinManager.verifyPin(pin)) {
-                onUnlocked()
-            } else {
-                isError = true
-                pin = ""
-                remainingLockout = pinManager.getRemainingLockoutSeconds()
-                delay(400)
-                isError = false
-            }
+    fun attemptUnlock() {
+        if (remainingLockout > 0) return
+        if (passwordManager.verifyPassword(password)) {
+            onUnlocked()
+        } else {
+            isError = true
+            password = ""
+            remainingLockout = passwordManager.getRemainingLockoutSeconds()
         }
+    }
+
+    fun triggerBiometric() {
+        if (activity == null) return
+        BiometricHelper.showPrompt(
+            activity = activity,
+            title = "Parmak İzi ile Aç",
+            subtitle = "Devam etmek için parmak izinizi doğrulayın",
+            negativeButtonText = "İptal",
+            onSuccess = { onUnlocked() },
+            onError = { /* kullanıcı iptal etti veya hata oluştu, sessizce yoksay */ }
+        )
     }
 
     Column(
@@ -61,91 +80,63 @@ fun LockScreen(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
-        
+
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = if (remainingLockout > 0) "Çok fazla hatalı deneme. ${remainingLockout}s bekleyin." 
-                   else if (isError) "Hatalı PIN, tekrar deneyin." 
-                   else "Devam etmek için PIN kodunuzu girin",
+            text = if (remainingLockout > 0) "Çok fazla hatalı deneme. ${remainingLockout}s bekleyin."
+                   else if (isError) "Hatalı şifre, tekrar deneyin."
+                   else "Devam etmek için şifrenizi girin",
             color = if (isError || remainingLockout > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 14.sp
         )
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        // PIN Noktaları
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            for (i in 0 until 4) {
-                val isFilled = i < pin.length
-                Box(
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (isFilled) MaterialTheme.colorScheme.primary 
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        )
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(64.dp))
-
-        // NumPad Tuş Takımı
-        val buttons = listOf(
-            listOf("1", "2", "3"),
-            listOf("4", "5", "6"),
-            listOf("7", "8", "9"),
-            listOf("", "0", "DEL")
+        OutlinedTextField(
+            value = password,
+            onValueChange = {
+                if (it.length <= StarLockPasswordManager.MAX_PASSWORD_LENGTH) {
+                    password = it
+                    isError = false
+                }
+            },
+            label = { Text("Şifre") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            visualTransformation = PasswordVisualTransformation(),
+            isError = isError,
+            singleLine = true,
+            enabled = remainingLockout == 0L,
+            modifier = Modifier.fillMaxWidth(0.85f)
         )
 
-        buttons.forEach { row ->
-            Row(
-                modifier = Modifier.fillMaxWidth(0.8f),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                row.forEach { btn ->
-                    if (btn.isEmpty()) {
-                        Spacer(modifier = Modifier.size(72.dp))
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .size(72.dp)
-                                .clip(CircleShape)
-                                .clickable(
-                                    enabled = remainingLockout == 0L,
-                                    onClick = {
-                                        if (btn == "DEL") {
-                                            if (pin.isNotEmpty()) pin = pin.dropLast(1)
-                                        } else {
-                                            if (pin.length < 4) pin += btn
-                                        }
-                                    }
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (btn == "DEL") {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.Backspace,
-                                    contentDescription = "Sil",
-                                    tint = MaterialTheme.colorScheme.onBackground
-                                )
-                            } else {
-                                Text(
-                                    text = btn,
-                                    fontSize = 28.sp,
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Button(
+            onClick = { attemptUnlock() },
+            enabled = remainingLockout == 0L && password.isNotEmpty(),
+            modifier = Modifier.fillMaxWidth(0.85f)
+        ) {
+            Text("Giriş Yap")
+        }
+
+        if (fingerprintAvailable) {
             Spacer(modifier = Modifier.height(16.dp))
+            OutlinedButton(
+                onClick = { triggerBiometric() },
+                enabled = remainingLockout == 0L,
+                modifier = Modifier.fillMaxWidth(0.85f)
+            ) {
+                Icon(Icons.Default.Fingerprint, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Parmak İzi ile Aç")
+            }
+        }
+    }
+
+    LaunchedEffect(fingerprintAvailable) {
+        if (fingerprintAvailable && remainingLockout == 0L) {
+            triggerBiometric()
         }
     }
 }

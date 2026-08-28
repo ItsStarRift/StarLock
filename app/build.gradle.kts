@@ -87,4 +87,8 @@ dependencies {
 
     // Görsel yükleme (ikonlar için, dosya + URL)
     implementation("io.coil-kt:coil-compose:2.6.0")
+
+    // Biyometrik kimlik doğrulama (parmak izi)
+    implementation("androidx.biometric:biometric:1.1.0")
+    implementation("androidx.fragment:fragment-ktx:1.8.1")
 }
