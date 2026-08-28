@@ -22,20 +22,23 @@ fun fieldIconForPreset(preset: FieldPreset): ImageVector {
         FieldPreset.PASSWORD -> Icons.Default.Password
         FieldPreset.TWO_FA_SECRET -> Icons.Default.Key
         FieldPreset.USERNAME -> Icons.Default.Person
-        FieldPreset.SECURITY_QUESTION, FieldPreset.CUSTOM -> Icons.Default.Label
+        FieldPreset.SECURITY_QUESTION -> Icons.Default.Key
+        FieldPreset.CUSTOM -> Icons.Default.Label
     }
 }
 
-/** Geriye dönük uyumluluk: DB'de zaten kayıtlı eski field'lar için label metnine göre ikon bulur. */
+/** Geriye dönük uyumluluk: DB'de zaten kayıtlı eski field'lar ve custom field'lar için label metnine göre ikon bulur. */
 fun fieldIconFor(label: String): ImageVector {
-    return when (label.trim().lowercase()) {
-        "telefon numarası", "phone number" -> Icons.Default.PhoneInTalk
-        "e-posta", "email", "e-mail" -> Icons.Default.Mail
-        "kullanıcı adı", "username" -> Icons.Default.Person
-        "şifre", "password" -> Icons.Default.Password
-        "kurtarma telefon numarası", "recovery phone number" -> Icons.Default.PhoneInTalk
-        "kurtarma e-mail", "kurtarma e-posta", "recovery e-mail", "recovery email" -> Icons.Default.Mail
-        "2fa gizli anahtarı", "2fa secret key" -> Icons.Default.Key
+    val l = label.trim().lowercase()
+    return when {
+        l.contains("kurtarma telefon") || l.contains("recovery phone") -> Icons.Default.PhoneInTalk
+        l.contains("kurtarma e-mail") || l.contains("kurtarma e-posta") || l.contains("recovery e-mail") || l.contains("recovery email") -> Icons.Default.Mail
+        l.contains("telefon") || l.contains("phone") -> Icons.Default.PhoneInTalk
+        l.contains("e-posta") || l.contains("email") || l.contains("e-mail") -> Icons.Default.Mail
+        l.contains("kullanıcı adı") || l.contains("username") -> Icons.Default.Person
+        l.contains("güvenlik sorusu") || l.contains("security question") -> Icons.Default.Key
+        l.contains("2fa") || l.contains("gizli anahtar") || l.contains("secret key") -> Icons.Default.Key
+        l.contains("şifre") || l.contains("password") -> Icons.Default.Password
         else -> Icons.Default.Label
     }
 }
