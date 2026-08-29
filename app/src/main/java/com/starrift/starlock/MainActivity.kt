@@ -215,13 +215,21 @@ private fun AppRoot(repository: AppRepository, passwordManager: StarLockPassword
                 }
             ) { backStackEntry ->
                 val accountId = backStackEntry.arguments?.getLong("accountId") ?: 0L
-                val fieldHistoryViewModel: FieldHistoryViewModel = viewModel(
-                    factory = FieldHistoryViewModelFactory(repository, accountId)
-                )
-                FieldHistoryScreen(
-                    viewModel = fieldHistoryViewModel,
-                    onBackClick = { navController.popBackStack() }
-                )
+                var historyUnlocked by remember { mutableStateOf(false) }
+                if (historyUnlocked) {
+                    val fieldHistoryViewModel: FieldHistoryViewModel = viewModel(
+                        factory = FieldHistoryViewModelFactory(repository, accountId)
+                    )
+                    FieldHistoryScreen(
+                        viewModel = fieldHistoryViewModel,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                } else {
+                    LockScreen(
+                        passwordManager = passwordManager,
+                        onUnlocked = { historyUnlocked = true }
+                    )
+                }
             }
 
         composable(route = Routes.APP_LOCK) {

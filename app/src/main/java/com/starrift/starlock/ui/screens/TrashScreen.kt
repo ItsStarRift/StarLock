@@ -67,7 +67,7 @@ fun TrashScreen(viewModel: TrashViewModel, onBackClick: () -> Unit) {
             actions = {
                 if (isSelectionMode) {
                     IconButton(onClick = { confirmRestoreAction = { viewModel.restoreSelected() } }) {
-                        Icon(Icons.Default.Restore, contentDescription = stringResource(R.string.restore))
+                        Icon(Icons.Default.Unarchive, contentDescription = stringResource(R.string.restore))
                     }
                     IconButton(onClick = { confirmDeleteAction = { viewModel.permanentlyDeleteSelected() } }) {
                         Icon(Icons.Default.DeleteForever, contentDescription = stringResource(R.string.delete_permanently))
@@ -283,7 +283,7 @@ private fun TrashRow(
             Checkbox(checked = isSelected, onCheckedChange = { onClick() })
         } else {
             IconButton(onClick = onRestore) {
-                Icon(Icons.Default.Restore, contentDescription = stringResource(R.string.restore))
+                Icon(Icons.Default.Unarchive, contentDescription = stringResource(R.string.restore))
             }
             IconButton(onClick = onDelete) {
                 Icon(

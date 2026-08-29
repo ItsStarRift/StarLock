@@ -5,7 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.HistoryToggleOff
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -42,7 +42,7 @@ fun FieldHistoryScreen(
                 },
                 actions = {
                     IconButton(onClick = { showClearConfirm = true }) {
-                        Icon(Icons.Default.DeleteSweep, contentDescription = stringResource(R.string.cd_clear_history))
+                        Icon(Icons.Default.HistoryToggleOff, contentDescription = stringResource(R.string.cd_clear_history))
                     }
                 }
             )
@@ -106,7 +106,7 @@ fun FieldHistoryScreen(
 
 @Composable
 private fun HistoryEntryCard(entry: FieldHistoryEntry, isDeletedTab: Boolean) {
-    val dateFormat = remember { SimpleDateFormat("dd.MM.yyyy HH:mm ( 'GMT'XXX)", Locale.getDefault()) }
+    val dateFormat = remember { SimpleDateFormat("dd.MM.yyyy HH:mm ('GMT'XXX)", Locale.getDefault()) }
     val formattedDate = remember(entry.timestamp) { dateFormat.format(Date(entry.timestamp)) }
 
     val titleRes = when (entry.changeType) {
