@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -39,7 +40,8 @@ import com.starrift.starlock.util.fieldIconFor
 @Composable
 fun AccountDetailScreen(
     viewModel: AccountDetailViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onHistoryClick: () -> Unit
 ) {
     val fields by viewModel.fields.collectAsState()
     val selectedIds by viewModel.selectedIds.collectAsState()
@@ -80,6 +82,11 @@ fun AccountDetailScreen(
                     navigationIcon = {
                         IconButton(onClick = onBackClick) {
                             Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.cd_back))
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = onHistoryClick) {
+                            Icon(Icons.Default.History, contentDescription = stringResource(R.string.cd_history))
                         }
                     }
                 )

@@ -8,4 +8,10 @@ class Converters {
 
     @TypeConverter
     fun toCategory(value: String): AppCategory = AppCategory.valueOf(value)
+
+    @TypeConverter
+    fun fromFieldChangeType(type: FieldChangeType): String = type.name
+
+    @TypeConverter
+    fun toFieldChangeType(value: String): FieldChangeType = FieldChangeType.valueOf(value)
 }

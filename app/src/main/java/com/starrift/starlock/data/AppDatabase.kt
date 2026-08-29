@@ -12,8 +12,8 @@ import net.sqlcipher.database.SQLiteDatabase
 import net.sqlcipher.database.SupportFactory
 
 @Database(
-    entities = [AppItem::class, AccountItem::class, AccountField::class],
-    version = 10,
+    entities = [AppItem::class, AccountItem::class, AccountField::class, FieldHistoryEntry::class],
+    version = 11,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -22,6 +22,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun appDao(): AppDao
     abstract fun accountDao(): AccountDao
     abstract fun accountFieldDao(): AccountFieldDao
+    abstract fun fieldHistoryDao(): FieldHistoryDao
 
     companion object {
         @Volatile
@@ -98,6 +99,26 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 
+    private val MIGRATION_10_11 = object : Migration(10, 11) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS `field_history` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `fieldId` INTEGER NOT NULL,
+                    `accountId` INTEGER NOT NULL,
+                    `changeType` TEXT NOT NULL,
+                    `oldLabel` TEXT,
+                    `newLabel` TEXT,
+                    `oldValue` TEXT,
+                    `newValue` TEXT,
+                    `timestamp` INTEGER NOT NULL
+                )
+            """)
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_field_history_fieldId` ON `field_history` (`fieldId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_field_history_accountId` ON `field_history` (`accountId`)")
+        }
+    }
+
     private fun buildDatabase(context: Context): AppDatabase {
             // SQLCipher'ın kendi native kütüphanesini yükle
             SQLiteDatabase.loadLibs(context)
@@ -107,7 +128,7 @@ abstract class AppDatabase : RoomDatabase() {
 
             return Room.databaseBuilder(context, AppDatabase::class.java, "hesap_yoneticisi.db")
                 .openHelperFactory(factory)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
                 .build()
         }
     }

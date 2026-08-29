@@ -3,6 +3,8 @@ package com.starrift.starlock.ui.screens
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.starrift.starlock.data.AccountField
+import com.starrift.starlock.data.FieldChangeType
+import com.starrift.starlock.data.FieldHistoryEntry
 import com.starrift.starlock.data.AppRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,13 +27,25 @@ class AccountDetailViewModel(
     fun addField(label: String, value: String, isCustomLabel: Boolean, isCensored: Boolean) {
         viewModelScope.launch {
             val currentSize = fields.value.size
-            repository.addField(
+            val newFieldId = repository.addField(
                 accountId = accountId,
                 label = label,
                 value = value,
                 isCustomLabel = isCustomLabel,
                 orderIndex = currentSize,
                 isCensored = isCensored
+            )
+            repository.addFieldHistoryEntry(
+                FieldHistoryEntry(
+                    fieldId = newFieldId,
+                    accountId = accountId,
+                    changeType = FieldChangeType.CREATED,
+                    oldLabel = null,
+                    newLabel = label.trim(),
+                    oldValue = null,
+                    newValue = value.trim(),
+                    timestamp = System.currentTimeMillis()
+                )
             )
         }
     }
@@ -104,9 +118,34 @@ class AccountDetailViewModel(
     fun editField(fieldId: Long, label: String, value: String, isCustomLabel: Boolean, isCensored: Boolean) {
         viewModelScope.launch {
             val current = fields.value.find { it.id == fieldId } ?: return@launch
+            val trimmedLabel = label.trim()
+            val trimmedValue = value.trim()
             repository.updateField(
-                current.copy(label = label.trim(), value = value.trim(), isCustomLabel = isCustomLabel, isCensored = isCensored)
+                current.copy(label = trimmedLabel, value = trimmedValue, isCustomLabel = isCustomLabel, isCensored = isCensored)
             )
+
+            val labelChanged = current.label != trimmedLabel
+            val valueChanged = current.value != trimmedValue
+            if (labelChanged || valueChanged) {
+                val changeType = when {
+                    labelChanged && valueChanged -> FieldChangeType.BOTH
+                    labelChanged -> FieldChangeType.FIELD_ONLY
+                    else -> FieldChangeType.VALUE_ONLY
+                }
+                repository.addFieldHistoryEntry(
+                    FieldHistoryEntry(
+                        fieldId = fieldId,
+                        accountId = accountId,
+                        changeType = changeType,
+                        oldLabel = if (labelChanged) current.label else null,
+                        newLabel = if (labelChanged) trimmedLabel else null,
+                        oldValue = if (valueChanged) current.value else null,
+                        newValue = if (valueChanged) trimmedValue else null,
+                        timestamp = System.currentTimeMillis()
+                    )
+                )
+            }
+
             _selectedIds.value = emptySet()
         }
     }

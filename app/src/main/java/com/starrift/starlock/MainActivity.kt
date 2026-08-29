@@ -196,9 +196,30 @@ private fun AppRoot(repository: AppRepository, passwordManager: StarLockPassword
             )
             AccountDetailScreen(
                 viewModel = accountDetailViewModel,
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onHistoryClick = { navController.navigate(Routes.fieldHistory(accountId)) }
             )
-        }
+            }
+
+            composable(
+                route = Routes.FIELD_HISTORY,
+                arguments = listOf(navArgument("accountId") { type = NavType.LongType }),
+                enterTransition = {
+                    slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(TRANSITION_DURATION)) + fadeIn(tween(TRANSITION_DURATION))
+                },
+                popExitTransition = {
+                    slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(TRANSITION_DURATION)) + fadeOut(tween(TRANSITION_DURATION))
+                }
+            ) { backStackEntry ->
+                val accountId = backStackEntry.arguments?.getLong("accountId") ?: 0L
+                val fieldHistoryViewModel: FieldHistoryViewModel = viewModel(
+                    factory = FieldHistoryViewModelFactory(repository, accountId)
+                )
+                FieldHistoryScreen(
+                    viewModel = fieldHistoryViewModel,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
 
         composable(route = Routes.APP_LOCK) {
             AppLockScreen(

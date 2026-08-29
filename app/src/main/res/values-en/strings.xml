@@ -149,4 +149,20 @@
     <string name="cd_edit">Edit</string>
     <string name="cd_archive_field">Archive Field</string>
     <string name="field_selected_count">%1$d selected</string>
+    <string name="cd_history">History</string>
+    <string name="field_history_title">History</string>
+    <string name="history_current_fields">Current Fields</string>
+    <string name="history_deleted_fields">Deleted Fields</string>
+    <string name="history_field_change">Field Change</string>
+    <string name="history_value_change">Value Change</string>
+    <string name="history_field_value_change">Field &amp; Field Value Change</string>
+    <string name="history_created">Created</string>
+    <string name="history_field_label">Field:</string>
+    <string name="history_value_label">Value:</string>
+    <string name="history_empty">No history yet.</string>
+    <string name="cd_clear_history">Clear History</string>
+    <string name="clear_history_confirm_title">Clear History?</string>
+    <string name="clear_history_confirm_text">All history entries for this account will be permanently deleted. This action cannot be undone.</string>
+    <string name="clear_history_confirm_action">Clear</string>
+    <string name="cd_field_deleted_warning">This field was deleted</string>
 </resources>
