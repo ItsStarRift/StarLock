@@ -51,6 +51,7 @@ import com.starrift.starlock.ui.theme.HesapYoneticisiTheme
 import com.starrift.starlock.util.StarLockPasswordManager
 import com.starrift.starlock.ui.screens.LockScreen
 import com.starrift.starlock.ui.screens.AppLockScreen
+import com.starrift.starlock.ui.screens.FirstSetupScreen
 import java.util.Locale
 
 class MainActivity : FragmentActivity() {
@@ -90,7 +91,7 @@ class MainActivity : FragmentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var isUnlocked by remember { mutableStateOf(!passwordManager.isPasswordSet()) }
+                    var isUnlocked by remember { mutableStateOf(false) }
 
                     if (isUnlocked) {
                         AppRoot(
@@ -104,10 +105,17 @@ class MainActivity : FragmentActivity() {
                     }
                 )
                     } else {
+                    if (passwordManager.isPasswordSet()) {
                         LockScreen(
                             passwordManager = passwordManager,
                             onUnlocked = { isUnlocked = true }
                         )
+                    } else {
+                        FirstSetupScreen(
+                            passwordManager = passwordManager,
+                            onSetupComplete = { isUnlocked = true }
+                        )
+                    }
                     }
                 }
             }
@@ -200,7 +208,7 @@ private fun AppRoot(repository: AppRepository, passwordManager: StarLockPassword
         }
 
         composable(route = Routes.TRASH) {
-            var trashUnlocked by remember { mutableStateOf(!passwordManager.isPasswordSet()) }
+            var trashUnlocked by remember { mutableStateOf(false) }
             if (trashUnlocked) {
                 val trashViewModel: TrashViewModel = viewModel(factory = TrashViewModelFactory(repository))
                 TrashScreen(
@@ -216,7 +224,7 @@ private fun AppRoot(repository: AppRepository, passwordManager: StarLockPassword
         }
 
     composable(route = Routes.ARCHIVED) {
-        var archivedUnlocked by remember { mutableStateOf(!passwordManager.isPasswordSet()) }
+        var archivedUnlocked by remember { mutableStateOf(false) }
         if (archivedUnlocked) {
             val archivedViewModel: ArchivedViewModel = viewModel(factory = ArchivedViewModelFactory(repository))
             ArchivedScreen(
