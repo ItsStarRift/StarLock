@@ -52,6 +52,9 @@ import com.starrift.starlock.util.StarLockPasswordManager
 import com.starrift.starlock.ui.screens.LockScreen
 import com.starrift.starlock.ui.screens.AppLockScreen
 import com.starrift.starlock.ui.screens.FirstSetupScreen
+import com.starrift.starlock.ui.screens.FieldHistoryScreen
+import com.starrift.starlock.ui.screens.FieldHistoryViewModel
+import com.starrift.starlock.ui.screens.FieldHistoryViewModelFactory
 import java.util.Locale
 
 class MainActivity : FragmentActivity() {
