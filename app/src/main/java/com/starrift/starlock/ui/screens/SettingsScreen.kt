@@ -52,7 +52,7 @@ private fun formatLastAction(context: android.content.Context, key: String): Pai
 }
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArchivedClick: () -> Unit, themeMode: String, onThemeChange: (String) -> Unit) {
+fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArchivedClick: () -> Unit, onAppLockClick: () -> Unit, themeMode: String, onThemeChange: (String) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showAboutDialog by remember { mutableStateOf(false) }

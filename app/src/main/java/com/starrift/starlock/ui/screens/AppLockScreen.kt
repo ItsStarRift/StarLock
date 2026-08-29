@@ -7,7 +7,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material.icons.filled.FingerprintOff
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material3.*
@@ -128,7 +127,7 @@ fun AppLockScreen(
                 )
 
                 AppLockOptionCard(
-                    icon = if (isFingerprintEnabled) Icons.Default.FingerprintOff else Icons.Default.Fingerprint,
+                    icon = Icons.Default.Fingerprint,
                     label = if (isFingerprintEnabled) "Disable\nFingerprint" else "Enable\nFingerprint",
                     modifier = Modifier.weight(1f),
                     onClick = {
