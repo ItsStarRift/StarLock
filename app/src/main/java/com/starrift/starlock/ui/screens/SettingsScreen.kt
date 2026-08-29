@@ -112,7 +112,7 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArc
             SettingsRow(
                 icon = Icons.Default.Lock,
                 title = stringResource(R.string.app_lock),
-                subtitle = "",
+                subtitle = "Manage password & fingerprint",
                 onClick = onAppLockClick
             )
             SettingsDivider()

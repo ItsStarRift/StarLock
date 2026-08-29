@@ -11,6 +11,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Password
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.starrift.starlock.util.BiometricHelper
 import com.starrift.starlock.util.StarLockPasswordManager
@@ -36,6 +39,7 @@ fun AppLockScreen(
 
     var showChangePasswordDialog by remember { mutableStateOf(false) }
     var showDisableFingerprintDialog by remember { mutableStateOf(false) }
+    var showEnableFingerprintDialog by remember { mutableStateOf(false) }
     var showNoBiometricMessage by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -138,8 +142,7 @@ fun AppLockScreen(
                         } else if (isFingerprintEnabled) {
                             showDisableFingerprintDialog = true
                         } else {
-                            passwordManager.setFingerprintEnabled(true)
-                            isFingerprintEnabled = true
+                            showEnableFingerprintDialog = true
                             showNoBiometricMessage = false
                         }
                     }
@@ -162,6 +165,17 @@ fun AppLockScreen(
             onDisabled = {
                 isFingerprintEnabled = false
                 showDisableFingerprintDialog = false
+            }
+        )
+    }
+
+    if (showEnableFingerprintDialog) {
+        EnableFingerprintDialog(
+            passwordManager = passwordManager,
+            onDismiss = { showEnableFingerprintDialog = false },
+            onEnabled = {
+                isFingerprintEnabled = true
+                showEnableFingerprintDialog = false
             }
         )
     }
@@ -214,6 +228,9 @@ private fun ChangePasswordDialog(
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
+    var currentPasswordVisible by remember { mutableStateOf(false) }
+    var newPasswordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -226,7 +243,12 @@ private fun ChangePasswordDialog(
                         onValueChange = { currentPassword = it; errorMessage = "" },
                         label = { Text("Mevcut şifre") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        visualTransformation = PasswordVisualTransformation(),
+                        visualTransformation = if (currentPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { currentPasswordVisible = !currentPasswordVisible }) {
+                                Icon(if (currentPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
+                            }
+                        },
                         isError = errorMessage.isNotEmpty(),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
@@ -241,7 +263,12 @@ private fun ChangePasswordDialog(
                         },
                         label = { Text("Yeni şifre (6-16 karakter)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        visualTransformation = PasswordVisualTransformation(),
+                        visualTransformation = if (newPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { newPasswordVisible = !newPasswordVisible }) {
+                                Icon(if (newPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
+                            }
+                        },
                         isError = errorMessage.isNotEmpty(),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
@@ -256,7 +283,12 @@ private fun ChangePasswordDialog(
                         },
                         label = { Text("Yeni şifre (tekrar)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        visualTransformation = PasswordVisualTransformation(),
+                        visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                                Icon(if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
+                            }
+                        },
                         isError = errorMessage.isNotEmpty(),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
@@ -305,6 +337,7 @@ private fun DisableFingerprintDialog(
 ) {
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -318,7 +351,12 @@ private fun DisableFingerprintDialog(
                     onValueChange = { password = it; errorMessage = "" },
                     label = { Text("Şifre") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
+                        }
+                    },
                     isError = errorMessage.isNotEmpty(),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -339,6 +377,62 @@ private fun DisableFingerprintDialog(
                 }
             }) {
                 Text("Kapat")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("İptal") }
+        }
+    )
+}
+
+@Composable
+private fun EnableFingerprintDialog(
+    passwordManager: StarLockPasswordManager,
+    onDismiss: () -> Unit,
+    onEnabled: () -> Unit
+) {
+    var password by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Parmak İzini Aç") },
+        text = {
+            Column {
+                Text("Devam etmek için şifrenizi girin")
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it; errorMessage = "" },
+                    label = { Text("Şifre") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
+                        }
+                    },
+                    isError = errorMessage.isNotEmpty(),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (errorMessage.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(errorMessage, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                if (passwordManager.verifyPassword(password)) {
+                    passwordManager.setFingerprintEnabled(true)
+                    onEnabled()
+                } else {
+                    errorMessage = "Hatalı şifre"
+                }
+            }) {
+                Text("Aç")
             }
         },
         dismissButton = {

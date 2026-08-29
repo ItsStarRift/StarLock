@@ -26,8 +26,8 @@ class StarLockPasswordManager(context: Context) {
     companion object {
         private const val ITERATIONS = 120_000
         private const val KEY_LENGTH_BITS = 256
-        private const val LOCKOUT_DURATION_MS = 30_000L
-        private const val MAX_ATTEMPTS = 5
+        private const val MAX_ATTEMPTS = 3
+        private val LOCKOUT_DURATIONS_SEC = longArrayOf(10L, 30L, 60L, 120L, 300L)
         const val MIN_PASSWORD_LENGTH = 6
         const val MAX_PASSWORD_LENGTH = 16
     }
@@ -48,6 +48,7 @@ class StarLockPasswordManager(context: Context) {
             .putString("password_hash", hash)
             .putString("password_salt", Base64.encodeToString(salt, Base64.NO_WRAP))
             .putInt("failed_attempts", 0)
+            .putInt("lockout_level", 0)
             .putLong("lockout_time", 0)
             .apply()
         return true
@@ -58,6 +59,7 @@ class StarLockPasswordManager(context: Context) {
             .remove("password_hash")
             .remove("password_salt")
             .remove("failed_attempts")
+            .remove("lockout_level")
             .remove("lockout_time")
             .remove("fingerprint_enabled")
             .apply()
@@ -73,12 +75,22 @@ class StarLockPasswordManager(context: Context) {
         val isCorrect = deriveHash(password, salt) == storedHash
 
         if (isCorrect) {
-            prefs.edit().putInt("failed_attempts", 0).putLong("lockout_time", 0).apply()
+            prefs.edit()
+                .putInt("failed_attempts", 0)
+                .putInt("lockout_level", 0)
+                .putLong("lockout_time", 0)
+                .apply()
         } else {
             val attempts = prefs.getInt("failed_attempts", 0) + 1
-            prefs.edit().putInt("failed_attempts", attempts).apply()
             if (attempts >= MAX_ATTEMPTS) {
-                prefs.edit().putLong("lockout_time", System.currentTimeMillis()).apply()
+                val level = prefs.getInt("lockout_level", 0)
+                prefs.edit()
+                    .putInt("failed_attempts", 0)
+                    .putInt("lockout_level", level + 1)
+                    .putLong("lockout_time", System.currentTimeMillis())
+                    .apply()
+            } else {
+                prefs.edit().putInt("failed_attempts", attempts).apply()
             }
         }
         return isCorrect
@@ -87,17 +99,25 @@ class StarLockPasswordManager(context: Context) {
     fun getRemainingLockoutSeconds(): Long {
         if (!isLockoutActive()) return 0
         val lockoutTime = prefs.getLong("lockout_time", 0)
+        val durationMs = currentLockoutDurationMs()
         val elapsed = System.currentTimeMillis() - lockoutTime
-        val remainingMillis = LOCKOUT_DURATION_MS - elapsed
+        val remainingMillis = durationMs - elapsed
         return if (remainingMillis > 0) TimeUnit.MILLISECONDS.toSeconds(remainingMillis) + 1 else 0
+    }
+
+    private fun currentLockoutDurationMs(): Long {
+        val level = prefs.getInt("lockout_level", 0)
+        val index = (level - 1).coerceIn(0, LOCKOUT_DURATIONS_SEC.size - 1)
+        return LOCKOUT_DURATIONS_SEC[index] * 1000L
     }
 
     private fun isLockoutActive(): Boolean {
         val lockoutTime = prefs.getLong("lockout_time", 0)
         if (lockoutTime == 0L) return false
+        val durationMs = currentLockoutDurationMs()
         val elapsed = System.currentTimeMillis() - lockoutTime
-        if (elapsed > LOCKOUT_DURATION_MS) {
-            prefs.edit().putInt("failed_attempts", 0).putLong("lockout_time", 0).apply()
+        if (elapsed > durationMs) {
+            prefs.edit().putLong("lockout_time", 0).apply()
             return false
         }
         return true
