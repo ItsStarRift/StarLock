@@ -80,9 +80,9 @@ class AppRepository(private val database: AppDatabase) {
     fun getAccountsForApp(appId: Long): Flow<List<AccountItem>> =
         database.accountDao().getAccountsForApp(appId)
 
-    suspend fun addAccount(appId: Long, name: String, iconPath: String?): Long {
+    suspend fun addAccount(appId: Long, name: String, iconPath: String?, tag: String? = null): Long {
         return database.accountDao().insertAccount(
-            AccountItem(appId = appId, name = name.trim(), iconPath = iconPath)
+            AccountItem(appId = appId, name = name.trim(), iconPath = iconPath, tag = tag?.trim()?.ifBlank { null })
         )
     }
 

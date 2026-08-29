@@ -74,13 +74,13 @@ class AccountListViewModel(
         if (!active) _searchQuery.value = ""
     }
 
-    fun addAccount(name: String, iconPath: String?) {
+    fun addAccount(name: String, iconPath: String?, tag: String? = null) {
         viewModelScope.launch {
-            repository.addAccount(appId, name, iconPath)
+            repository.addAccount(appId, name, iconPath, tag)
         }
     }
 
-    fun updateAccount(id: Long, name: String, iconPath: String?) {
+    fun updateAccount(id: Long, name: String, iconPath: String?, tag: String? = null) {
         viewModelScope.launch {
             val existing = allAccounts.value.find { it.id == id }
             repository.updateAccount(
@@ -95,7 +95,8 @@ class AccountListViewModel(
                     isDeleted = existing?.isDeleted ?: false,
                     deletedAt = existing?.deletedAt,
                     isArchived = existing?.isArchived ?: false,
-                    archivedAt = existing?.archivedAt
+                    archivedAt = existing?.archivedAt,
+                    tag = tag?.trim()?.ifBlank { null }
                 )
             )
         }

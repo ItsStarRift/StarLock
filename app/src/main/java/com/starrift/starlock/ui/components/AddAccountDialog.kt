@@ -33,15 +33,17 @@ import com.starrift.starlock.util.CameraFileHelper
 @Composable
 fun AddAccountDialog(
     onDismiss: () -> Unit,
-    onSave: (name: String, iconPath: String?) -> Unit,
+    onSave: (name: String, iconPath: String?, tag: String?) -> Unit,
     existingName: String? = null,
-    existingIconPath: String? = null
+    existingIconPath: String? = null,
+    existingTag: String? = null
 ) {
     val context = LocalContext.current
     val isEditMode = existingName != null
 
     var name by remember { mutableStateOf(existingName ?: "") }
     var iconPath by remember { mutableStateOf(existingIconPath) }
+        var tag by remember { mutableStateOf(existingTag ?: "") }
     var showPickerSheet by remember { mutableStateOf(false) }
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -95,7 +97,7 @@ fun AddAccountDialog(
                             modifier = Modifier.weight(1f).padding(start = 4.dp)
                         )
                         Button(
-                            onClick = { onSave(name, iconPath); onDismiss() },
+                            onClick = { onSave(name, iconPath, tag); onDismiss() },
                             shape = RoundedCornerShape(20.dp),
                             enabled = name.isNotBlank()
                         ) {
@@ -157,6 +159,16 @@ fun AddAccountDialog(
                             value = name,
                             onValueChange = { name = it },
                             label = { Text(stringResource(R.string.account_name_label)) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedTextField(
+                            value = tag,
+                            onValueChange = { tag = it },
+                            label = { Text(stringResource(R.string.account_tag_label)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )

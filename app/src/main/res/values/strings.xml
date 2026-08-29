@@ -86,6 +86,7 @@
     <string name="save_btn">Kaydet</string>
     <string name="add_account_title">Hesap Ekle</string>
     <string name="account_name_label">Hesap İsmi</string>
+    <string name="account_tag_label">Etiket adı (opsiyonel)</string>
     <string name="field_value_label">%1$s Değeri</string>
     <string name="value_label">Değer</string>
     <string name="custom_field_option">Diğer/Özel Terim</string>

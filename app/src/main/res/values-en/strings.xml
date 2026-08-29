@@ -92,6 +92,7 @@
     <string name="save_btn">Save</string>
     <string name="add_account_title">Add Account</string>
     <string name="account_name_label">Account Name</string>
+    <string name="account_tag_label">Tag name (optional)</string>
     <string name="field_value_label">%1$s Value</string>
     <string name="value_label">Value</string>
     <string name="custom_field_option">Other/Custom Field</string>

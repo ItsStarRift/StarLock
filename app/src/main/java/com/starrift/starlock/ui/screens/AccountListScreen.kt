@@ -220,8 +220,8 @@ fun AccountListScreen(
         if (showAddDialog) {
             AddAccountDialog(
                 onDismiss = { showAddDialog = false },
-                onSave = { name, iconPath ->
-                    viewModel.addAccount(name, iconPath)
+                onSave = { name, iconPath, tag ->
+                    viewModel.addAccount(name, iconPath, tag)
                     showAddDialog = false
                 }
             )
@@ -232,13 +232,14 @@ fun AccountListScreen(
             if (editingAccount != null) {
                 AddAccountDialog(
                     onDismiss = { showEditDialog = false },
-                    onSave = { name, iconPath ->
-                        viewModel.updateAccount(editingAccount.id, name, iconPath)
+                    onSave = { name, iconPath, tag ->
+                        viewModel.updateAccount(editingAccount.id, name, iconPath, tag)
                         showEditDialog = false
                         selectedIds = emptySet()
                     },
                     existingName = editingAccount.name,
-                    existingIconPath = editingAccount.iconPath
+                    existingIconPath = editingAccount.iconPath,
+                    existingTag = editingAccount.tag
                 )
             }
         }
@@ -496,12 +497,20 @@ fun AccountRow(
             }
         }
         Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = highlightAccountMatch(account.name, query),
-            fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f)
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = highlightAccountMatch(account.name, query),
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.bodyLarge
+            )
+            if (!account.tag.isNullOrBlank()) {
+                Text(
+                    text = account.tag,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            }
+        }
         if (selectionMode) {
             Checkbox(checked = isSelected, onCheckedChange = { onClick() })
         }
