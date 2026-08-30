@@ -51,6 +51,17 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 
 private enum class BottomTab { UYGULAMALAR, AYARLAR }
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun MarqueeFilterText(text: String) {
+    Text(
+        text = text,
+        maxLines = 1,
+        softWrap = false,
+        modifier = Modifier.basicMarquee()
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
@@ -318,12 +329,7 @@ private fun CategoryFilterRow(
                 onClick = { onSelect(CategoryFilter.APPS) },
                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
             ) {
-                Text(
-                    text = stringResource(R.string.filter_apps),
-                    maxLines = 1,
-                    softWrap = false,
-                    modifier = Modifier.basicMarquee()
-                )
+                MarqueeFilterText(text = stringResource(R.string.filter_apps))
             }
             SegmentedButton(
                 selected = selected == CategoryFilter.GAMES,
