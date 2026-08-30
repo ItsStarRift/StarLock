@@ -24,7 +24,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.starrift.starlock.R
 import com.starrift.starlock.data.AccountFieldWithAccountName
 import com.starrift.starlock.data.AccountWithAppName
 import com.starrift.starlock.data.AppItem
