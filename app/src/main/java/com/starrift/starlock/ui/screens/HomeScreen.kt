@@ -51,7 +51,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 
 private enum class BottomTab { UYGULAMALAR, AYARLAR }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
