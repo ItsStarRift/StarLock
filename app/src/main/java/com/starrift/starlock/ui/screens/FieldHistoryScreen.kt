@@ -5,7 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.HistoryToggleOff
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -42,7 +42,7 @@ fun FieldHistoryScreen(
                 },
                 actions = {
                     IconButton(onClick = { showClearConfirm = true }) {
-                        Icon(Icons.Default.HistoryToggleOff, contentDescription = stringResource(R.string.cd_clear_history))
+                        Icon(painter = painterResource(R.drawable.delete_history_48), contentDescription = stringResource(R.string.cd_clear_history))
                     }
                 }
             )

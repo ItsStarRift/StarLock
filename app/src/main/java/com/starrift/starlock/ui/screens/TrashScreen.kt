@@ -14,6 +14,8 @@ import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.res.painterResource
+import com.starrift.starlock.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -67,7 +69,7 @@ fun TrashScreen(viewModel: TrashViewModel, onBackClick: () -> Unit) {
             actions = {
                 if (isSelectionMode) {
                     IconButton(onClick = { confirmRestoreAction = { viewModel.restoreSelected() } }) {
-                        Icon(Icons.Default.Unarchive, contentDescription = stringResource(R.string.restore))
+                        Icon(painter = painterResource(R.drawable.restore_from_trash_48), contentDescription = stringResource(R.string.restore))
                     }
                     IconButton(onClick = { confirmDeleteAction = { viewModel.permanentlyDeleteSelected() } }) {
                         Icon(Icons.Default.DeleteForever, contentDescription = stringResource(R.string.delete_permanently))
@@ -283,7 +285,7 @@ private fun TrashRow(
             Checkbox(checked = isSelected, onCheckedChange = { onClick() })
         } else {
             IconButton(onClick = onRestore) {
-                Icon(Icons.Default.Unarchive, contentDescription = stringResource(R.string.restore))
+                Icon(painter = painterResource(R.drawable.restore_from_trash_48), contentDescription = stringResource(R.string.restore))
             }
             IconButton(onClick = onDelete) {
                 Icon(
