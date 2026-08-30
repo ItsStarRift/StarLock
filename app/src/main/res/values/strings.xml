@@ -153,6 +153,13 @@
     <string name="field_history_title">Geçmiş</string>
     <string name="history_current_fields">Mevcut Terimler</string>
     <string name="history_deleted_fields">Silinen Terimler</string>
+    <string name="history_archived_fields">Arşivlenen Terimler</string>
+    <string name="clear_history_confirm_text_current">Mevcut Terimler kısmındaki tüm geçmiş kayıtları kalıcı olarak silinecek. Emin misiniz?</string>
+    <string name="clear_history_confirm_text_deleted">Silinen Terimler kısmındaki tüm geçmiş kayıtları kalıcı olarak silinecek. Emin misiniz?</string>
+    <string name="clear_history_confirm_text_archived">Arşivlenen Terimler kısmındaki tüm geçmiş kayıtları kalıcı olarak silinecek. Emin misiniz?</string>
+    <string name="cd_field_archived_warning">Bu terim arşivlendi</string>
+    <string name="field_moved_to_trash_notice">Bu terim çöp kutusuna taşındı</string>
+    <string name="field_moved_to_archive_notice">Bu terim arşivlenenlere taşındı</string>
     <string name="history_field_change">Terim Değişikliği</string>
     <string name="history_value_change">Değer Değişikliği</string>
     <string name="history_field_value_change">Terim ve Değer Değişikliği</string>

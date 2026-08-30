@@ -104,8 +104,20 @@ class AppRepository(private val database: AppDatabase) {
     fun getDeletedFieldHistory(accountId: Long): Flow<List<FieldHistoryEntry>> =
         database.fieldHistoryDao().getDeletedHistoryForAccount(accountId)
 
+    fun getArchivedFieldHistory(accountId: Long): Flow<List<FieldHistoryEntry>> =
+        database.fieldHistoryDao().getArchivedHistoryForAccount(accountId)
+
     suspend fun clearFieldHistory(accountId: Long) =
         database.fieldHistoryDao().clearHistoryForAccount(accountId)
+
+    suspend fun clearCurrentFieldHistory(accountId: Long) =
+        database.fieldHistoryDao().clearCurrentHistoryForAccount(accountId)
+
+    suspend fun clearDeletedFieldHistory(accountId: Long) =
+        database.fieldHistoryDao().clearDeletedHistoryForAccount(accountId)
+
+    suspend fun clearArchivedFieldHistory(accountId: Long) =
+        database.fieldHistoryDao().clearArchivedHistoryForAccount(accountId)
 
     suspend fun addField(accountId: Long, label: String, value: String, isCustomLabel: Boolean, orderIndex: Int, isCensored: Boolean = false): Long {
         return database.accountFieldDao().insertField(

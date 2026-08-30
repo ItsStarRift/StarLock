@@ -49,24 +49,31 @@ fun FieldHistoryScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+        SingleChoiceSegmentedButtonRow(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            SegmentedButton(
+                selected = selectedTab == HistoryTab.CURRENT,
+                onClick = { viewModel.selectTab(HistoryTab.CURRENT) },
+                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
             ) {
-                SegmentedButton(
-                    selected = selectedTab == HistoryTab.CURRENT,
-                    onClick = { viewModel.selectTab(HistoryTab.CURRENT) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-                ) {
-                    Text(stringResource(R.string.history_current_fields))
-                }
-                SegmentedButton(
-                    selected = selectedTab == HistoryTab.DELETED,
-                    onClick = { viewModel.selectTab(HistoryTab.DELETED) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-                ) {
-                    Text(stringResource(R.string.history_deleted_fields))
-                }
+                Text(stringResource(R.string.history_current_fields))
             }
+            SegmentedButton(
+                selected = selectedTab == HistoryTab.ARCHIVED,
+                onClick = { viewModel.selectTab(HistoryTab.ARCHIVED) },
+                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
+            ) {
+                Text(stringResource(R.string.history_archived_fields))
+            }
+            SegmentedButton(
+                selected = selectedTab == HistoryTab.DELETED,
+                onClick = { viewModel.selectTab(HistoryTab.DELETED) },
+                shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
+            ) {
+                Text(stringResource(R.string.history_deleted_fields))
+            }
+        }
 
             if (entries.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -78,7 +85,7 @@ fun FieldHistoryScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(entries, key = { it.id }) { entry ->
-                        HistoryEntryCard(entry = entry, isDeletedTab = selectedTab == HistoryTab.DELETED)
+                        HistoryEntryCard(entry = entry, tab = selectedTab)
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
@@ -90,7 +97,14 @@ fun FieldHistoryScreen(
         AlertDialog(
             onDismissRequest = { showClearConfirm = false },
             title = { Text(stringResource(R.string.clear_history_confirm_title)) },
-            text = { Text(stringResource(R.string.clear_history_confirm_text)) },
+                text = {
+                    val confirmTextRes = when (selectedTab) {
+                        HistoryTab.CURRENT -> R.string.clear_history_confirm_text_current
+                        HistoryTab.DELETED -> R.string.clear_history_confirm_text_deleted
+                        HistoryTab.ARCHIVED -> R.string.clear_history_confirm_text_archived
+                    }
+                    Text(stringResource(confirmTextRes))
+                },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.clearHistory()
@@ -105,7 +119,7 @@ fun FieldHistoryScreen(
 }
 
 @Composable
-private fun HistoryEntryCard(entry: FieldHistoryEntry, isDeletedTab: Boolean) {
+private fun HistoryEntryCard(entry: FieldHistoryEntry, tab: HistoryTab) {
     val dateFormat = remember { SimpleDateFormat("dd.MM.yyyy HH:mm ('GMT'XXX)", Locale.getDefault()) }
     val formattedDate = remember(entry.timestamp) { dateFormat.format(Date(entry.timestamp)) }
 
@@ -144,13 +158,23 @@ private fun HistoryEntryCard(entry: FieldHistoryEntry, isDeletedTab: Boolean) {
                 )
             }
 
-            if (isDeletedTab) {
-                Icon(
-                    imageVector = Icons.Default.Warning,
-                    contentDescription = stringResource(R.string.cd_field_deleted_warning),
-                    tint = Color.Red,
-                    modifier = Modifier.align(Alignment.Top)
-                )
+            if (tab == HistoryTab.DELETED || tab == HistoryTab.ARCHIVED) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = Color.Red
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(
+                            if (tab == HistoryTab.DELETED) R.string.field_moved_to_trash_notice
+                            else R.string.field_moved_to_archive_notice
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Red
+                    )
+                }
             }
         }
     }

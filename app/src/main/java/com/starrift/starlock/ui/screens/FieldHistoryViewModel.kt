@@ -13,7 +13,8 @@ import kotlinx.coroutines.launch
 
 enum class HistoryTab {
     CURRENT,
-    DELETED
+    DELETED,
+    ARCHIVED
 }
 
 class FieldHistoryViewModel(
@@ -33,6 +34,7 @@ class FieldHistoryViewModel(
         when (tab) {
             HistoryTab.CURRENT -> repository.getCurrentFieldHistory(accountId)
             HistoryTab.DELETED -> repository.getDeletedFieldHistory(accountId)
+            HistoryTab.ARCHIVED -> repository.getArchivedFieldHistory(accountId)
         }
     }.stateIn(
         scope = viewModelScope,
@@ -42,7 +44,11 @@ class FieldHistoryViewModel(
 
     fun clearHistory() {
         viewModelScope.launch {
-            repository.clearFieldHistory(accountId)
+            when (_selectedTab.value) {
+                HistoryTab.CURRENT -> repository.clearCurrentFieldHistory(accountId)
+                HistoryTab.DELETED -> repository.clearDeletedFieldHistory(accountId)
+                HistoryTab.ARCHIVED -> repository.clearArchivedFieldHistory(accountId)
+            }
         }
     }
 }

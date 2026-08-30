@@ -153,6 +153,13 @@
     <string name="field_history_title">History</string>
     <string name="history_current_fields">Current Fields</string>
     <string name="history_deleted_fields">Deleted Fields</string>
+    <string name="history_archived_fields">Archived Fields</string>
+    <string name="clear_history_confirm_text_current">All history entries in Current Fields will be permanently deleted. Are you sure?</string>
+    <string name="clear_history_confirm_text_deleted">All history entries in Deleted Fields will be permanently deleted. Are you sure?</string>
+    <string name="clear_history_confirm_text_archived">All history entries in Archived Fields will be permanently deleted. Are you sure?</string>
+    <string name="cd_field_archived_warning">This field was archived</string>
+    <string name="field_moved_to_trash_notice">This field was moved to trash</string>
+    <string name="field_moved_to_archive_notice">This field was moved to archived</string>
     <string name="history_field_change">Field Change</string>
     <string name="history_value_change">Value Change</string>
     <string name="history_field_value_change">Field &amp; Field Value Change</string>
