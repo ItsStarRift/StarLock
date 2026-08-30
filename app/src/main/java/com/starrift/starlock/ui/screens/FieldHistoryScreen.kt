@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
 import com.starrift.starlock.R
 import com.starrift.starlock.data.FieldChangeType
 import com.starrift.starlock.data.FieldHistoryEntry
@@ -57,21 +58,33 @@ fun FieldHistoryScreen(
                 onClick = { viewModel.selectTab(HistoryTab.CURRENT) },
                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
             ) {
-                Text(stringResource(R.string.history_current_fields))
+                Text(
+                    text = stringResource(R.string.history_current_fields),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
             SegmentedButton(
                 selected = selectedTab == HistoryTab.ARCHIVED,
                 onClick = { viewModel.selectTab(HistoryTab.ARCHIVED) },
                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
             ) {
-                Text(stringResource(R.string.history_archived_fields))
+                Text(
+                    text = stringResource(R.string.history_archived_fields),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
             SegmentedButton(
                 selected = selectedTab == HistoryTab.DELETED,
                 onClick = { viewModel.selectTab(HistoryTab.DELETED) },
                 shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
             ) {
-                Text(stringResource(R.string.history_deleted_fields))
+                Text(
+                    text = stringResource(R.string.history_deleted_fields),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
 

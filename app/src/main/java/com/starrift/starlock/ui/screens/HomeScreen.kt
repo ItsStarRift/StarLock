@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -317,7 +318,12 @@ private fun CategoryFilterRow(
                 onClick = { onSelect(CategoryFilter.APPS) },
                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
             ) {
-                Text(stringResource(R.string.filter_apps))
+                Text(
+                    text = stringResource(R.string.filter_apps),
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier.basicMarquee()
+                )
             }
             SegmentedButton(
                 selected = selected == CategoryFilter.GAMES,
