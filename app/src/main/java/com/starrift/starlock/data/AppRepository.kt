@@ -162,6 +162,10 @@ class AppRepository(private val database: AppDatabase) {
                     put("category", app.category.name)
                     put("iconPath", app.iconPath ?: JSONObject.NULL)
                     put("iconData", iconPathToBase64(app.iconPath) ?: JSONObject.NULL)
+                put("isDeleted", app.isDeleted)
+                put("deletedAt", app.deletedAt ?: JSONObject.NULL)
+                put("isArchived", app.isArchived)
+                put("archivedAt", app.archivedAt ?: JSONObject.NULL)
                 }
             )
         }
@@ -175,6 +179,11 @@ class AppRepository(private val database: AppDatabase) {
                     put("name", account.name)
                     put("iconPath", account.iconPath ?: JSONObject.NULL)
                     put("iconData", iconPathToBase64(account.iconPath) ?: JSONObject.NULL)
+                put("isDeleted", account.isDeleted)
+                put("deletedAt", account.deletedAt ?: JSONObject.NULL)
+                put("isArchived", account.isArchived)
+                put("archivedAt", account.archivedAt ?: JSONObject.NULL)
+                put("tag", account.tag ?: JSONObject.NULL)
                 }
             )
         }
@@ -189,6 +198,11 @@ class AppRepository(private val database: AppDatabase) {
                     put("value", field.value)
                     put("isCustomLabel", field.isCustomLabel)
                     put("orderIndex", field.orderIndex)
+                put("isDeleted", field.isDeleted)
+                put("deletedAt", field.deletedAt ?: JSONObject.NULL)
+                put("isArchived", field.isArchived)
+                put("archivedAt", field.archivedAt ?: JSONObject.NULL)
+                put("isCensored", field.isCensored)
                 }
             )
         }
@@ -196,6 +210,24 @@ class AppRepository(private val database: AppDatabase) {
         root.put("apps", appsArray)
         root.put("accounts", accountsArray)
         root.put("fields", fieldsArray)
+
+        val historyArray = JSONArray()
+        database.fieldHistoryDao().getAllHistoryOnce().forEach { h ->
+            historyArray.put(
+                JSONObject().apply {
+                    put("id", h.id)
+                    put("fieldId", h.fieldId)
+                    put("accountId", h.accountId)
+                    put("changeType", h.changeType.name)
+                    put("oldLabel", h.oldLabel ?: JSONObject.NULL)
+                    put("newLabel", h.newLabel ?: JSONObject.NULL)
+                    put("oldValue", h.oldValue ?: JSONObject.NULL)
+                    put("newValue", h.newValue ?: JSONObject.NULL)
+                    put("timestamp", h.timestamp)
+                }
+            )
+        }
+        root.put("history", historyArray)
         return root.toString(2)
     }
 
@@ -212,7 +244,11 @@ class AppRepository(private val database: AppDatabase) {
                     id = obj.getLong("id"),
                     name = obj.getString("name"),
                     category = AppCategory.valueOf(obj.getString("category")),
-                    iconPath = base64ToIconPath(context, iconData)
+                    iconPath = base64ToIconPath(context, iconData),
+                isDeleted = obj.optBoolean("isDeleted", false),
+                deletedAt = if (obj.isNull("deletedAt")) null else obj.optLong("deletedAt"),
+                isArchived = obj.optBoolean("isArchived", false),
+                archivedAt = if (obj.isNull("archivedAt")) null else obj.optLong("archivedAt")
                 )
             )
         }
@@ -227,7 +263,12 @@ class AppRepository(private val database: AppDatabase) {
                     id = obj.getLong("id"),
                     appId = obj.getLong("appId"),
                     name = obj.getString("name"),
-                    iconPath = base64ToIconPath(context, iconData)
+                    iconPath = base64ToIconPath(context, iconData),
+                isDeleted = obj.optBoolean("isDeleted", false),
+                deletedAt = if (obj.isNull("deletedAt")) null else obj.optLong("deletedAt"),
+                isArchived = obj.optBoolean("isArchived", false),
+                archivedAt = if (obj.isNull("archivedAt")) null else obj.optLong("archivedAt"),
+                tag = if (obj.isNull("tag")) null else obj.getString("tag")
                 )
             )
         }
@@ -243,7 +284,12 @@ class AppRepository(private val database: AppDatabase) {
                     label = obj.getString("label"),
                     value = obj.getString("value"),
                     isCustomLabel = obj.getBoolean("isCustomLabel"),
-                    orderIndex = obj.getInt("orderIndex")
+                    orderIndex = obj.getInt("orderIndex"),
+                isDeleted = obj.optBoolean("isDeleted", false),
+                deletedAt = if (obj.isNull("deletedAt")) null else obj.optLong("deletedAt"),
+                isArchived = obj.optBoolean("isArchived", false),
+                archivedAt = if (obj.isNull("archivedAt")) null else obj.optLong("archivedAt"),
+                isCensored = obj.optBoolean("isCensored", false)
                 )
             )
         }
@@ -252,5 +298,26 @@ class AppRepository(private val database: AppDatabase) {
         database.appDao().insertApps(apps)
         database.accountDao().insertAccounts(accounts)
         database.accountFieldDao().insertFields(fields)
+
+        val history = mutableListOf<FieldHistoryEntry>()
+        val historyArray = root.optJSONArray("history") ?: JSONArray()
+        for (i in 0 until historyArray.length()) {
+            val obj = historyArray.getJSONObject(i)
+            history.add(
+                FieldHistoryEntry(
+                    id = obj.getLong("id"),
+                    fieldId = obj.getLong("fieldId"),
+                    accountId = obj.getLong("accountId"),
+                    changeType = FieldChangeType.valueOf(obj.getString("changeType")),
+                    oldLabel = if (obj.isNull("oldLabel")) null else obj.getString("oldLabel"),
+                    newLabel = if (obj.isNull("newLabel")) null else obj.getString("newLabel"),
+                    oldValue = if (obj.isNull("oldValue")) null else obj.getString("oldValue"),
+                    newValue = if (obj.isNull("newValue")) null else obj.getString("newValue"),
+                    timestamp = obj.getLong("timestamp")
+                )
+            )
+        }
+        database.fieldHistoryDao().clearAllHistory()
+        database.fieldHistoryDao().insertAll(history)
     }
 }

@@ -147,6 +147,7 @@ class AccountDetailViewModel(
             }
 
             _selectedIds.value = emptySet()
+                _isSelectionMode.value = false
         }
     }
 

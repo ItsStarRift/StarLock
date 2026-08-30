@@ -11,6 +11,15 @@ interface FieldHistoryDao {
     @Insert
     suspend fun insertEntry(entry: FieldHistoryEntry)
 
+    @Insert
+    suspend fun insertAll(entries: List<FieldHistoryEntry>)
+
+    @Query("SELECT * FROM field_history")
+    suspend fun getAllHistoryOnce(): List<FieldHistoryEntry>
+
+    @Query("DELETE FROM field_history")
+    suspend fun clearAllHistory()
+
     @Query("""
         SELECT field_history.* FROM field_history
         INNER JOIN account_fields ON field_history.fieldId = account_fields.id
