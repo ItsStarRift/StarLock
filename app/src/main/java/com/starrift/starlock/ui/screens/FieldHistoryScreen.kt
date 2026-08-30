@@ -1,6 +1,8 @@
 package com.starrift.starlock.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -21,6 +23,17 @@ import com.starrift.starlock.data.FieldHistoryEntry
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun MarqueeTabText(text: String) {
+    Text(
+        text = text,
+        maxLines = 1,
+        softWrap = false,
+        modifier = Modifier.basicMarquee()
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,40 +64,28 @@ fun FieldHistoryScreen(
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
         SingleChoiceSegmentedButtonRow(
-            modifier = Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             SegmentedButton(
                 selected = selectedTab == HistoryTab.CURRENT,
                 onClick = { viewModel.selectTab(HistoryTab.CURRENT) },
                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
             ) {
-                Text(
-                    text = stringResource(R.string.history_current_fields),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Text(text = stringResource(R.string.history_current_fields))
             }
             SegmentedButton(
                 selected = selectedTab == HistoryTab.ARCHIVED,
                 onClick = { viewModel.selectTab(HistoryTab.ARCHIVED) },
                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
             ) {
-                Text(
-                    text = stringResource(R.string.history_archived_fields),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                MarqueeTabText(text = stringResource(R.string.history_archived_fields))
             }
             SegmentedButton(
                 selected = selectedTab == HistoryTab.DELETED,
                 onClick = { viewModel.selectTab(HistoryTab.DELETED) },
                 shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
             ) {
-                Text(
-                    text = stringResource(R.string.history_deleted_fields),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Text(text = stringResource(R.string.history_deleted_fields))
             }
         }
 
