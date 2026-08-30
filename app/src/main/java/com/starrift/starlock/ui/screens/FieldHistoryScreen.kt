@@ -51,7 +51,7 @@ fun FieldHistoryScreen(
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
         SingleChoiceSegmentedButtonRow(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             SegmentedButton(
                 selected = selectedTab == HistoryTab.CURRENT,
