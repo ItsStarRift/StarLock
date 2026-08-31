@@ -23,6 +23,10 @@ import com.starrift.starlock.data.FieldHistoryEntry
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.DisposableEffect
+import android.app.Activity
+import android.view.WindowManager
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -41,6 +45,15 @@ fun FieldHistoryScreen(
     viewModel: FieldHistoryViewModel,
     onBackClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val window = (context as? Activity)?.window
+        window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
+
     val entries by viewModel.historyEntries.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
     var showClearConfirm by remember { mutableStateOf(false) }

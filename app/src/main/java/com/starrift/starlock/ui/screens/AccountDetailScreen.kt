@@ -32,6 +32,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.DisposableEffect
+import android.app.Activity
+import android.view.WindowManager
 import androidx.compose.ui.res.stringResource
 import com.starrift.starlock.R
 import androidx.compose.ui.unit.dp
@@ -46,6 +49,15 @@ fun AccountDetailScreen(
     onBackClick: () -> Unit,
     onHistoryClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val window = (context as? Activity)?.window
+        window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
+
     val fields by viewModel.fields.collectAsState()
     val selectedIds by viewModel.selectedIds.collectAsState()
     val selectionMode by viewModel.isSelectionMode.collectAsState()

@@ -12,6 +12,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.DisposableEffect
+import android.app.Activity
+import android.view.WindowManager
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.res.painterResource
@@ -42,6 +46,14 @@ private fun formatDeletedAt(millis: Long?): String {
 
 @Composable
 fun TrashScreen(viewModel: TrashViewModel, onBackClick: () -> Unit) {
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val window = (context as? Activity)?.window
+        window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
     val selectedTab by viewModel.selectedTab.collectAsState()
     val isSelectionMode by viewModel.isSelectionMode.collectAsState()
     val selectedIds by viewModel.selectedIds.collectAsState()

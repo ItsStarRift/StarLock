@@ -19,6 +19,10 @@ import androidx.compose.material3.*
 import androidx.compose.ui.layout.ContentScale
 import com.starrift.starlock.util.fieldIconFor
 import coil.compose.AsyncImage
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.DisposableEffect
+import android.app.Activity
+import android.view.WindowManager
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +47,14 @@ private fun formatArchivedAt(millis: Long?): String {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArchivedScreen(viewModel: ArchivedViewModel, onBackClick: () -> Unit) {
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val window = (context as? Activity)?.window
+        window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
     val selectedTab by viewModel.selectedTab.collectAsState()
     val archivedApps by viewModel.archivedApps.collectAsState()
     val archivedAccounts by viewModel.archivedAccounts.collectAsState()
