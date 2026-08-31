@@ -256,15 +256,9 @@ fun FieldItemCard(
                             val copiedValue = field.value
                     val clip = ClipData.newPlainText(field.label, copiedValue)
                             clipboard.setPrimaryClip(clip)
-                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                                Toast.makeText(context, context.getString(R.string.copied_toast), Toast.LENGTH_SHORT).show()
-                            }
+                            Toast.makeText(context, context.getString(R.string.copied_toast), Toast.LENGTH_SHORT).show()
                             Handler(Looper.getMainLooper()).postDelayed({
-                                val currentClip = clipboard.primaryClip
-                                val currentText = if (currentClip != null && currentClip.itemCount > 0) currentClip.getItemAt(0).text?.toString() else null
-                                if (currentText == copiedValue) {
-                                    clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
-                                }
+                                clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
                             }, 30000L)
                 }) {
                     Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_copy))
