@@ -271,7 +271,6 @@ private fun AppRoot(repository: AppRepository, passwordManager: StarLockPassword
         }
     }
         }
-}
 
         composable(route = Routes.BACKUP) {
             var backupUnlocked by remember { mutableStateOf(false) }
@@ -288,4 +287,5 @@ private fun AppRoot(repository: AppRepository, passwordManager: StarLockPassword
             }
         }
     }
+}
 }
