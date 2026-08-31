@@ -255,12 +255,16 @@ fun FieldItemCard(
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             val copiedValue = field.value
                     val clip = ClipData.newPlainText(field.label, copiedValue)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                val sensitiveExtras = android.os.PersistableBundle()
+                                sensitiveExtras.putBoolean(android.content.ClipDescription.EXTRA_IS_SENSITIVE, true)
+                                clip.description.extras = sensitiveExtras
+                            }
                             clipboard.setPrimaryClip(clip)
                             Toast.makeText(context, context.getString(R.string.copied_toast), Toast.LENGTH_SHORT).show()
                             Handler(Looper.getMainLooper()).postDelayed({
                                 clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
-                                Toast.makeText(context, "DEBUG: Pano temizlendi", Toast.LENGTH_LONG).show()
-                            }, 5000L)
+                            }, 30000L)
                 }) {
                     Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_copy))
                 }
