@@ -259,7 +259,8 @@ fun FieldItemCard(
                             Toast.makeText(context, context.getString(R.string.copied_toast), Toast.LENGTH_SHORT).show()
                             Handler(Looper.getMainLooper()).postDelayed({
                                 clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
-                            }, 30000L)
+                                Toast.makeText(context, "DEBUG: Pano temizlendi", Toast.LENGTH_LONG).show()
+                            }, 5000L)
                 }) {
                     Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_copy))
                 }
