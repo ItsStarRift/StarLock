@@ -47,6 +47,7 @@ import com.starrift.starlock.ui.screens.TrashViewModelFactory
 import com.starrift.starlock.ui.screens.ArchivedScreen
 import com.starrift.starlock.ui.screens.ArchivedViewModel
 import com.starrift.starlock.ui.screens.ArchivedViewModelFactory
+import com.starrift.starlock.ui.screens.BackupScreen
 import com.starrift.starlock.ui.theme.HesapYoneticisiTheme
 import com.starrift.starlock.util.StarLockPasswordManager
 import com.starrift.starlock.ui.screens.LockScreen
@@ -131,6 +132,7 @@ private const val TRANSITION_DURATION = 320
 @Composable
 private fun AppRoot(repository: AppRepository, passwordManager: StarLockPasswordManager, sortPreferenceManager: com.starrift.starlock.util.SortPreferenceManager, themeMode: String, onThemeChange: (String) -> Unit) {
     val navController = rememberNavController()
+    val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(repository))
 
     NavHost(
         navController = navController,
@@ -148,7 +150,6 @@ private fun AppRoot(repository: AppRepository, passwordManager: StarLockPassword
             }
         ) {
             val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(repository, sortPreferenceManager))
-            val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(repository))
             HomeScreen(
                 viewModel = homeViewModel,
                 onAppClick = { appId -> navController.navigate(Routes.accountList(appId)) },
