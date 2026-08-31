@@ -3,6 +3,9 @@ package com.starrift.starlock.ui.screens
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -250,9 +253,19 @@ fun FieldItemCard(
                 }
                 IconButton(onClick = {
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    val clip = ClipData.newPlainText(field.label, field.value)
-                    clipboard.setPrimaryClip(clip)
-                    Toast.makeText(context, context.getString(R.string.copied_toast), Toast.LENGTH_SHORT).show()
+                            val copiedValue = field.value
+                    val clip = ClipData.newPlainText(field.label, copiedValue)
+                            clipboard.setPrimaryClip(clip)
+                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                                Toast.makeText(context, context.getString(R.string.copied_toast), Toast.LENGTH_SHORT).show()
+                            }
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                val currentClip = clipboard.primaryClip
+                                val currentText = if (currentClip != null && currentClip.itemCount > 0) currentClip.getItemAt(0).text?.toString() else null
+                                if (currentText == copiedValue) {
+                                    clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
+                                }
+                            }, 30000L)
                 }) {
                     Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_copy))
                 }
