@@ -16,6 +16,8 @@
     <string name="export_data_sub">Tüm verileri .json dosyası olarak indir</string>
     <string name="import_data">Verileri içe aktar</string>
     <string name="import_data_sub">Bir .json yedeğinden geri yükle</string>
+    <string name="backup">Backup</string>
+    <string name="backup_sub">Verilerinizi yedekleyin</string>
     <string name="feedback">Geri Bildirim Gönder</string>
     <string name="github_page">Github Sayfası</string>
     <string name="github_sub">Kaynak kodu görüntüle</string>

@@ -16,6 +16,8 @@
     <string name="export_data_sub">Download all data as a .json file</string>
     <string name="import_data">Import Data</string>
     <string name="import_data_sub">Restore from a .json backup</string>
+    <string name="backup">Backup</string>
+    <string name="backup_sub">Back up your data</string>
     <string name="feedback">Send Feedback</string>
     <string name="github_page">Github Page</string>
     <string name="github_sub">View source code</string>

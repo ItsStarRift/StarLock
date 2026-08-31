@@ -52,7 +52,7 @@ private fun formatLastAction(context: android.content.Context, key: String): Pai
 }
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArchivedClick: () -> Unit, onAppLockClick: () -> Unit, themeMode: String, onThemeChange: (String) -> Unit) {
+fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArchivedClick: () -> Unit, onAppLockClick: () -> Unit, onBackupClick: () -> Unit, themeMode: String, onThemeChange: (String) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showAboutDialog by remember { mutableStateOf(false) }
@@ -139,19 +139,10 @@ fun SettingsScreen(viewModel: SettingsViewModel, onTrashClick: () -> Unit, onArc
 
         SettingsGroup {
             SettingsRow(
-                icon = Icons.Default.Upload,
-                title = stringResource(R.string.export_data),
-                subtitle = stringResource(R.string.export_data_sub),
-                onClick = { exportLauncher.launch("StarLock-Backup.json") },
-                trailingText = formatLastAction(context, "last_export_at")
-            )
-            SettingsDivider()
-            SettingsRow(
-                icon = Icons.Default.Download,
-                title = stringResource(R.string.import_data),
-                subtitle = stringResource(R.string.import_data_sub),
-                onClick = { importLauncher.launch(arrayOf("application/json")) },
-                trailingText = formatLastAction(context, "last_import_at")
+                icon = Icons.Default.CloudUpload,
+                title = stringResource(R.string.backup),
+                subtitle = stringResource(R.string.backup_sub),
+                onClick = onBackupClick
             )
             SettingsDivider()
             SettingsRow(

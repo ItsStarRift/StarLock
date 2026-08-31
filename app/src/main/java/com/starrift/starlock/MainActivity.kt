@@ -152,7 +152,7 @@ private fun AppRoot(repository: AppRepository, passwordManager: StarLockPassword
             HomeScreen(
                 viewModel = homeViewModel,
                 onAppClick = { appId -> navController.navigate(Routes.accountList(appId)) },
-                settingsContent = { SettingsScreen(viewModel = settingsViewModel, onTrashClick = { navController.navigate(Routes.TRASH) }, onArchivedClick = { navController.navigate(Routes.ARCHIVED) }, onAppLockClick = { navController.navigate(Routes.APP_LOCK) }, themeMode = themeMode, onThemeChange = onThemeChange) }
+                settingsContent = { SettingsScreen(viewModel = settingsViewModel, onTrashClick = { navController.navigate(Routes.TRASH) }, onArchivedClick = { navController.navigate(Routes.ARCHIVED) }, onAppLockClick = { navController.navigate(Routes.APP_LOCK) }, onBackupClick = { navController.navigate(Routes.BACKUP) }, themeMode = themeMode, onThemeChange = onThemeChange) }
             )
         }
 
@@ -271,4 +271,21 @@ private fun AppRoot(repository: AppRepository, passwordManager: StarLockPassword
         }
     }
         }
+}
+
+        composable(route = Routes.BACKUP) {
+            var backupUnlocked by remember { mutableStateOf(false) }
+            if (backupUnlocked) {
+                BackupScreen(
+                    viewModel = settingsViewModel,
+                    onBackClick = { navController.popBackStack() }
+                )
+            } else {
+                LockScreen(
+                    passwordManager = passwordManager,
+                    onUnlocked = { backupUnlocked = true }
+                )
+            }
+        }
+    }
 }

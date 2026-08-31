@@ -8,6 +8,7 @@ object Routes {
     const val TRASH = "trash"
     const val ARCHIVED = "archived"
     const val APP_LOCK = "app_lock"
+    const val BACKUP = "backup"
 
     fun accountList(appId: Long) = "accounts/$appId"
     fun accountDetail(accountId: Long) = "account_detail/$accountId"
