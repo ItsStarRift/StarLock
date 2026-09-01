@@ -53,7 +53,12 @@ private fun formatBackupLastAction(context: Context, key: String): Pair<String, 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BackupScreen(viewModel: SettingsViewModel, onBackClick: () -> Unit) {
+fun BackupScreen(
+    viewModel: SettingsViewModel,
+    onBackClick: () -> Unit,
+    onCloudExportClick: () -> Unit,
+    onCloudImportClick: () -> Unit
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -168,9 +173,7 @@ fun BackupScreen(viewModel: SettingsViewModel, onBackClick: () -> Unit) {
                 subtitle = "to cloud",
                 lastAction = formatBackupLastAction(context, "last_cloud_export_at"),
                 modifier = Modifier.weight(1f),
-                onClick = {
-                    Toast.makeText(context, "Yakında kullanılabilir olacak", Toast.LENGTH_SHORT).show()
-                }
+                onClick = onCloudExportClick
             )
             BackupActionCard(
                 icon = Icons.Default.CloudDownload,
@@ -178,9 +181,7 @@ fun BackupScreen(viewModel: SettingsViewModel, onBackClick: () -> Unit) {
                 subtitle = "from cloud",
                 lastAction = formatBackupLastAction(context, "last_cloud_import_at"),
                 modifier = Modifier.weight(1f),
-                onClick = {
-                    Toast.makeText(context, "Yakında kullanılabilir olacak", Toast.LENGTH_SHORT).show()
-                }
+                onClick = onCloudImportClick
             )
         }
 
