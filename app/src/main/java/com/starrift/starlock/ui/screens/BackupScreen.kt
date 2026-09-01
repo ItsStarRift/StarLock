@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -56,12 +57,19 @@ fun BackupScreen(viewModel: SettingsViewModel, onBackClick: () -> Unit) {
     val importSuccessMsg = "Veriler içe aktarıldı"
     val importFailMsg = "İçe aktarma başarısız oldu"
 
+    var showExportPasswordDialog by remember { mutableStateOf(false) }
+    var exportPassword by remember { mutableStateOf("") }
+    var exportPasswordConfirm by remember { mutableStateOf("") }
+    var exportPasswordError by remember { mutableStateOf<String?>(null) }
+    var pendingExportPassword by remember { mutableStateOf<String?>(null) }
+
     val offlineExportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream")
     ) { uri: Uri? ->
-        if (uri != null) {
+        val password = pendingExportPassword
+        if (uri != null && password != null) {
             scope.launch {
-                val success = viewModel.exportTo(context, uri)
+                val success = viewModel.exportEncryptedTo(context, uri, password)
                 if (success) {
                     context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
                         .edit().putLong("last_offline_export_at", System.currentTimeMillis()).apply()
@@ -69,10 +77,13 @@ fun BackupScreen(viewModel: SettingsViewModel, onBackClick: () -> Unit) {
                 Toast.makeText(context, if (success) exportSuccessMsg else exportFailMsg, Toast.LENGTH_SHORT).show()
             }
         }
+        pendingExportPassword = null
     }
 
     var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
     var showImportConfirmDialog by remember { mutableStateOf(false) }
+    var importPassword by remember { mutableStateOf("") }
+    var importPasswordError by remember { mutableStateOf<String?>(null) }
 
     val offlineImportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -165,7 +176,12 @@ fun BackupScreen(viewModel: SettingsViewModel, onBackClick: () -> Unit) {
                 subtitle = "as a .starlk file",
                 lastAction = formatBackupLastAction(context, "last_offline_export_at"),
                 modifier = Modifier.weight(1f),
-                onClick = { offlineExportLauncher.launch(backupFileName()) }
+                onClick = {
+                    exportPassword = ""
+                    exportPasswordConfirm = ""
+                    exportPasswordError = null
+                    showExportPasswordDialog = true
+                }
             )
             BackupActionCard(
                 icon = Icons.Default.Download,
@@ -182,21 +198,50 @@ fun BackupScreen(viewModel: SettingsViewModel, onBackClick: () -> Unit) {
 
     if (showImportConfirmDialog) {
         AlertDialog(
-            onDismissRequest = { showImportConfirmDialog = false },
+            onDismissRequest = {
+                showImportConfirmDialog = false
+                importPassword = ""
+                importPasswordError = null
+            },
             title = { Text("Import Data") },
-            text = { Text("This action will replace ALL existing data on your device with the selected backup. Current data will be deleted and cannot be recovered. Continue?") },
+            text = {
+                Column {
+                    Text("This action will replace ALL existing data on your device with the selected backup. Current data will be deleted and cannot be recovered.")
+                    Spacer(Modifier.height(12.dp))
+                    Text("Enter the backup password used when this file was exported.")
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = importPassword,
+                        onValueChange = {
+                            importPassword = it
+                            importPasswordError = null
+                        },
+                        label = { Text("Backup Password") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        isError = importPasswordError != null,
+                        supportingText = importPasswordError?.let { { Text(it) } },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
             confirmButton = {
                 TextButton(onClick = {
-                    showImportConfirmDialog = false
                     val uri = pendingImportUri
-                    if (uri != null) {
+                    val password = importPassword
+                    if (uri != null && password.isNotEmpty()) {
                         scope.launch {
-                            val success = viewModel.importFrom(context, uri)
+                            val success = viewModel.importEncryptedFrom(context, uri, password)
                             if (success) {
                                 context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
                                     .edit().putLong("last_offline_import_at", System.currentTimeMillis()).apply()
+                                showImportConfirmDialog = false
+                                importPassword = ""
+                                importPasswordError = null
+                                Toast.makeText(context, importSuccessMsg, Toast.LENGTH_SHORT).show()
+                            } else {
+                                importPasswordError = "Incorrect password or corrupted file"
                             }
-                            Toast.makeText(context, if (success) importSuccessMsg else importFailMsg, Toast.LENGTH_SHORT).show()
                         }
                     }
                 }) {
@@ -204,7 +249,88 @@ fun BackupScreen(viewModel: SettingsViewModel, onBackClick: () -> Unit) {
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showImportConfirmDialog = false }) {
+                TextButton(onClick = {
+                    showImportConfirmDialog = false
+                    importPassword = ""
+                    importPasswordError = null
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showExportPasswordDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showExportPasswordDialog = false
+                exportPassword = ""
+                exportPasswordConfirm = ""
+                exportPasswordError = null
+            },
+            title = { Text("Set Backup Password") },
+            text = {
+                Column {
+                    Text("This password encrypts your backup file. It is separate from your app lock password and is used only for this backup file.")
+                    Spacer(Modifier.height(8.dp))
+                    Text("If you forget it, this backup cannot be recovered. There is no way to reset it.")
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = exportPassword,
+                        onValueChange = {
+                            exportPassword = it
+                            exportPasswordError = null
+                        },
+                        label = { Text("Backup Password") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = exportPasswordConfirm,
+                        onValueChange = {
+                            exportPasswordConfirm = it
+                            exportPasswordError = null
+                        },
+                        label = { Text("Confirm Password") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        isError = exportPasswordError != null,
+                        supportingText = exportPasswordError?.let { { Text(it) } },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    when {
+                        exportPassword.length < 6 || exportPassword.length > 16 -> {
+                            exportPasswordError = "Password must be 6-16 characters"
+                        }
+                        exportPassword != exportPasswordConfirm -> {
+                            exportPasswordError = "Passwords do not match"
+                        }
+                        else -> {
+                            pendingExportPassword = exportPassword
+                            showExportPasswordDialog = false
+                            exportPassword = ""
+                            exportPasswordConfirm = ""
+                            exportPasswordError = null
+                            offlineExportLauncher.launch(backupFileName())
+                        }
+                    }
+                }) {
+                    Text("Continue")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showExportPasswordDialog = false
+                    exportPassword = ""
+                    exportPasswordConfirm = ""
+                    exportPasswordError = null
+                }) {
                     Text("Cancel")
                 }
             }
