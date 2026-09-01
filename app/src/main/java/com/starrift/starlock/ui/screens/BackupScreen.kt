@@ -15,6 +15,8 @@ import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -62,6 +65,8 @@ fun BackupScreen(viewModel: SettingsViewModel, onBackClick: () -> Unit) {
     var exportPasswordConfirm by remember { mutableStateOf("") }
     var exportPasswordError by remember { mutableStateOf<String?>(null) }
     var pendingExportPassword by remember { mutableStateOf<String?>(null) }
+    var exportPasswordVisible by remember { mutableStateOf(false) }
+    var exportPasswordConfirmVisible by remember { mutableStateOf(false) }
 
     val offlineExportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream")
@@ -84,6 +89,7 @@ fun BackupScreen(viewModel: SettingsViewModel, onBackClick: () -> Unit) {
     var showImportConfirmDialog by remember { mutableStateOf(false) }
     var importPassword by remember { mutableStateOf("") }
     var importPasswordError by remember { mutableStateOf<String?>(null) }
+    var importPasswordVisible by remember { mutableStateOf(false) }
 
     val offlineImportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -217,7 +223,15 @@ fun BackupScreen(viewModel: SettingsViewModel, onBackClick: () -> Unit) {
                             importPasswordError = null
                         },
                         label = { Text("Backup Password") },
-                        visualTransformation = PasswordVisualTransformation(),
+                        visualTransformation = if (importPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { importPasswordVisible = !importPasswordVisible }) {
+                                Icon(
+                                    if (importPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = if (importPasswordVisible) "Hide password" else "Show password"
+                                )
+                            }
+                        },
                         singleLine = true,
                         isError = importPasswordError != null,
                         supportingText = importPasswordError?.let { { Text(it) } },
@@ -282,7 +296,15 @@ fun BackupScreen(viewModel: SettingsViewModel, onBackClick: () -> Unit) {
                             exportPasswordError = null
                         },
                         label = { Text("Backup Password") },
-                        visualTransformation = PasswordVisualTransformation(),
+                        visualTransformation = if (exportPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { exportPasswordVisible = !exportPasswordVisible }) {
+                                Icon(
+                                    if (exportPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = if (exportPasswordVisible) "Hide password" else "Show password"
+                                )
+                            }
+                        },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -294,7 +316,15 @@ fun BackupScreen(viewModel: SettingsViewModel, onBackClick: () -> Unit) {
                             exportPasswordError = null
                         },
                         label = { Text("Confirm Password") },
-                        visualTransformation = PasswordVisualTransformation(),
+                        visualTransformation = if (exportPasswordConfirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { exportPasswordConfirmVisible = !exportPasswordConfirmVisible }) {
+                                Icon(
+                                    if (exportPasswordConfirmVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = if (exportPasswordConfirmVisible) "Hide password" else "Show password"
+                                )
+                            }
+                        },
                         singleLine = true,
                         isError = exportPasswordError != null,
                         supportingText = exportPasswordError?.let { { Text(it) } },
