@@ -1,6 +1,8 @@
 package com.starrift.starlock.ui.screens
 
 import android.content.Context
+import android.app.Activity
+import android.view.WindowManager
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -54,6 +56,17 @@ private fun formatBackupLastAction(context: Context, key: String): Pair<String, 
 fun BackupScreen(viewModel: SettingsViewModel, onBackClick: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+    val activity = context as? Activity
+    DisposableEffect(Unit) {
+        activity?.window?.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+        onDispose {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
 
     val exportSuccessMsg = "Veriler dışa aktarıldı"
     val exportFailMsg = "Dışa aktarma başarısız oldu"
