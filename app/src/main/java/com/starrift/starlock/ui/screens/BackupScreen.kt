@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -17,6 +18,8 @@ import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -33,6 +36,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+
+enum class CloudProvider {
+    GOOGLE_DRIVE, WEBDAV
+}
 
 private fun backupFileName(): String {
     val sdf = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
@@ -55,9 +62,7 @@ private fun formatBackupLastAction(context: Context, key: String): Pair<String, 
 @Composable
 fun BackupScreen(
     viewModel: SettingsViewModel,
-    onBackClick: () -> Unit,
-    onCloudExportClick: () -> Unit,
-    onCloudImportClick: () -> Unit
+    onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -83,6 +88,22 @@ fun BackupScreen(
     var exportPasswordConfirm by remember { mutableStateOf("") }
     var exportPasswordError by remember { mutableStateOf<String?>(null) }
     var pendingExportPassword by remember { mutableStateOf<String?>(null) }
+
+    var showCloudExportSheet by remember { mutableStateOf(false) }
+    var showCloudImportSheet by remember { mutableStateOf(false) }
+
+    var cloudExportProvider by remember { mutableStateOf<CloudProvider?>(null) }
+    var cloudImportProvider by remember { mutableStateOf<CloudProvider?>(null) }
+
+    var webdavExportUrl by remember { mutableStateOf("") }
+    var webdavExportUsername by remember { mutableStateOf("") }
+    var webdavExportPassword by remember { mutableStateOf("") }
+    var webdavExportPasswordVisible by remember { mutableStateOf(false) }
+
+    var webdavImportUrl by remember { mutableStateOf("") }
+    var webdavImportUsername by remember { mutableStateOf("") }
+    var webdavImportPassword by remember { mutableStateOf("") }
+    var webdavImportPasswordVisible by remember { mutableStateOf(false) }
     var exportPasswordVisible by remember { mutableStateOf(false) }
     var exportPasswordConfirmVisible by remember { mutableStateOf(false) }
 
@@ -173,7 +194,7 @@ fun BackupScreen(
                 subtitle = "to cloud",
                 lastAction = formatBackupLastAction(context, "last_cloud_export_at"),
                 modifier = Modifier.weight(1f),
-                onClick = onCloudExportClick
+                onClick = { showCloudExportSheet = true }
             )
             BackupActionCard(
                 icon = Icons.Default.CloudDownload,
@@ -181,7 +202,7 @@ fun BackupScreen(
                 subtitle = "from cloud",
                 lastAction = formatBackupLastAction(context, "last_cloud_import_at"),
                 modifier = Modifier.weight(1f),
-                onClick = onCloudImportClick
+                onClick = { showCloudImportSheet = true }
             )
         }
 
@@ -380,6 +401,180 @@ fun BackupScreen(
             }
         )
     }
+
+    if (showCloudExportSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showCloudExportSheet = false
+                cloudExportProvider = null
+                webdavExportUrl = ""
+                webdavExportUsername = ""
+                webdavExportPassword = ""
+            }
+        ) {
+            Column(modifier = Modifier.padding(horizontal = 20.dp).padding(bottom = 24.dp)) {
+                Text("Cloud Export", style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(16.dp))
+
+                if (cloudExportProvider == null) {
+                    Text("Choose where to export your data", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(16.dp))
+                    CloudProviderCard(
+                        icon = Icons.Default.Cloud,
+                        title = "Google Drive",
+                        subtitle = "Stored privately in your app's hidden Drive folder",
+                        onClick = { cloudExportProvider = CloudProvider.GOOGLE_DRIVE }
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    CloudProviderCard(
+                        icon = Icons.Default.Storage,
+                        title = "WebDAV (Custom cloud server)",
+                        subtitle = "Connect to your own server using a URL, username, and password",
+                        onClick = { cloudExportProvider = CloudProvider.WEBDAV }
+                    )
+                } else {
+                    TextButton(onClick = { cloudExportProvider = null }) {
+                        Text("Change provider")
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    when (cloudExportProvider) {
+                        CloudProvider.GOOGLE_DRIVE -> {
+                            Text("Google Drive Export is coming soon.", style = MaterialTheme.typography.bodyMedium)
+                        }
+                        CloudProvider.WEBDAV -> {
+                            OutlinedTextField(
+                                value = webdavExportUrl,
+                                onValueChange = { webdavExportUrl = it },
+                                label = { Text("Server URL") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            OutlinedTextField(
+                                value = webdavExportUsername,
+                                onValueChange = { webdavExportUsername = it },
+                                label = { Text("Username") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            OutlinedTextField(
+                                value = webdavExportPassword,
+                                onValueChange = { webdavExportPassword = it },
+                                label = { Text("Password") },
+                                visualTransformation = if (webdavExportPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                trailingIcon = {
+                                    IconButton(onClick = { webdavExportPasswordVisible = !webdavExportPasswordVisible }) {
+                                        Icon(
+                                            if (webdavExportPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                            contentDescription = if (webdavExportPasswordVisible) "Hide password" else "Show password"
+                                        )
+                                    }
+                                },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            Button(
+                                onClick = { },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Export")
+                            }
+                        }
+                        else -> {}
+                    }
+                }
+            }
+        }
+    }
+
+    if (showCloudImportSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showCloudImportSheet = false
+                cloudImportProvider = null
+                webdavImportUrl = ""
+                webdavImportUsername = ""
+                webdavImportPassword = ""
+            }
+        ) {
+            Column(modifier = Modifier.padding(horizontal = 20.dp).padding(bottom = 24.dp)) {
+                Text("Cloud Import", style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(16.dp))
+
+                if (cloudImportProvider == null) {
+                    Text("Choose where to import your data from", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(16.dp))
+                    CloudProviderCard(
+                        icon = Icons.Default.Cloud,
+                        title = "Google Drive",
+                        subtitle = "Stored privately in your app's hidden Drive folder",
+                        onClick = { cloudImportProvider = CloudProvider.GOOGLE_DRIVE }
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    CloudProviderCard(
+                        icon = Icons.Default.Storage,
+                        title = "WebDAV (Custom cloud server)",
+                        subtitle = "Connect to your own server using a URL, username, and password",
+                        onClick = { cloudImportProvider = CloudProvider.WEBDAV }
+                    )
+                } else {
+                    TextButton(onClick = { cloudImportProvider = null }) {
+                        Text("Change provider")
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    when (cloudImportProvider) {
+                        CloudProvider.GOOGLE_DRIVE -> {
+                            Text("Google Drive Import is coming soon.", style = MaterialTheme.typography.bodyMedium)
+                        }
+                        CloudProvider.WEBDAV -> {
+                            OutlinedTextField(
+                                value = webdavImportUrl,
+                                onValueChange = { webdavImportUrl = it },
+                                label = { Text("Server URL") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            OutlinedTextField(
+                                value = webdavImportUsername,
+                                onValueChange = { webdavImportUsername = it },
+                                label = { Text("Username") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            OutlinedTextField(
+                                value = webdavImportPassword,
+                                onValueChange = { webdavImportPassword = it },
+                                label = { Text("Password") },
+                                visualTransformation = if (webdavImportPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                trailingIcon = {
+                                    IconButton(onClick = { webdavImportPasswordVisible = !webdavImportPasswordVisible }) {
+                                        Icon(
+                                            if (webdavImportPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                            contentDescription = if (webdavImportPasswordVisible) "Hide password" else "Show password"
+                                        )
+                                    }
+                                },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            Button(
+                                onClick = { },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Import")
+                            }
+                        }
+                        else -> {}
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -413,6 +608,33 @@ private fun BackupActionCard(
                     style = MaterialTheme.typography.labelSmall,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CloudProviderCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp)),
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(32.dp))
+            Spacer(Modifier.width(16.dp))
+            Column {
+                Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                Text(subtitle, style = MaterialTheme.typography.bodySmall)
             }
         }
     }

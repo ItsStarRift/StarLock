@@ -9,8 +9,6 @@ object Routes {
     const val ARCHIVED = "archived"
     const val APP_LOCK = "app_lock"
     const val BACKUP = "backup"
-    const val CLOUD_EXPORT = "cloud_export"
-    const val CLOUD_IMPORT = "cloud_import"
 
     fun accountList(appId: Long) = "accounts/$appId"
     fun accountDetail(accountId: Long) = "account_detail/$accountId"

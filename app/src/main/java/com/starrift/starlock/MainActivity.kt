@@ -48,8 +48,6 @@ import com.starrift.starlock.ui.screens.ArchivedScreen
 import com.starrift.starlock.ui.screens.ArchivedViewModel
 import com.starrift.starlock.ui.screens.ArchivedViewModelFactory
 import com.starrift.starlock.ui.screens.BackupScreen
-import com.starrift.starlock.ui.screens.CloudBackupScreen
-import com.starrift.starlock.ui.screens.CloudBackupMode
 import com.starrift.starlock.ui.theme.HesapYoneticisiTheme
 import com.starrift.starlock.util.StarLockPasswordManager
 import com.starrift.starlock.ui.screens.LockScreen
@@ -279,9 +277,7 @@ private fun AppRoot(repository: AppRepository, passwordManager: StarLockPassword
             if (backupUnlocked) {
                 BackupScreen(
                     viewModel = settingsViewModel,
-                    onBackClick = { navController.popBackStack() },
-                    onCloudExportClick = { navController.navigate(Routes.CLOUD_EXPORT) },
-                    onCloudImportClick = { navController.navigate(Routes.CLOUD_IMPORT) }
+                    onBackClick = { navController.popBackStack() }
                 )
             } else {
                 LockScreen(
@@ -289,20 +285,6 @@ private fun AppRoot(repository: AppRepository, passwordManager: StarLockPassword
                     onUnlocked = { backupUnlocked = true }
                 )
             }
-        }
-
-        composable(route = Routes.CLOUD_EXPORT) {
-            CloudBackupScreen(
-                mode = CloudBackupMode.EXPORT,
-                onBackClick = { navController.popBackStack() }
-            )
-        }
-
-        composable(route = Routes.CLOUD_IMPORT) {
-            CloudBackupScreen(
-                mode = CloudBackupMode.IMPORT,
-                onBackClick = { navController.popBackStack() }
-            )
         }
     }
 }
