@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.starrift.starlock.data.AppRepository
 import com.starrift.starlock.util.BackupCryptoManager
+import com.starrift.starlock.util.WebDavClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -52,6 +53,42 @@ class SettingsViewModel(private val repository: AppRepository) : ViewModel() {
             val encrypted = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
                 ?: return@withContext false
             val json = BackupCryptoManager.decrypt(encrypted, password) ?: return@withContext false
+            repository.importAllDataFromJson(context, json)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun exportEncryptedToWebDav(
+        context: Context,
+        url: String,
+        username: String,
+        password: String,
+        backupPassword: String
+    ): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val json = repository.exportAllDataAsJson()
+            val encrypted = BackupCryptoManager.encrypt(json, backupPassword)
+            val result = WebDavClient.upload(url, username, password, encrypted.toByteArray())
+            result.isSuccess
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun importEncryptedFromWebDav(
+        context: Context,
+        url: String,
+        username: String,
+        password: String,
+        backupPassword: String
+    ): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val downloadResult = WebDavClient.download(url, username, password)
+            val bytes = downloadResult.getOrNull() ?: return@withContext false
+            val encrypted = String(bytes)
+            val json = BackupCryptoManager.decrypt(encrypted, backupPassword) ?: return@withContext false
             repository.importAllDataFromJson(context, json)
             true
         } catch (e: Exception) {

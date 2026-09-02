@@ -41,6 +41,10 @@ enum class CloudProvider {
     GOOGLE_DRIVE, WEBDAV
 }
 
+enum class ExportTarget {
+    OFFLINE, WEBDAV
+}
+
 private fun backupFileName(): String {
     val sdf = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
     return "StarLock-Backup-${sdf.format(Date())}.starlk"
@@ -88,6 +92,7 @@ fun BackupScreen(
     var exportPasswordConfirm by remember { mutableStateOf("") }
     var exportPasswordError by remember { mutableStateOf<String?>(null) }
     var pendingExportPassword by remember { mutableStateOf<String?>(null) }
+    var exportTarget by remember { mutableStateOf(ExportTarget.OFFLINE) }
 
     var showCloudExportSheet by remember { mutableStateOf(false) }
     var showCloudImportSheet by remember { mutableStateOf(false) }
@@ -125,6 +130,7 @@ fun BackupScreen(
     }
 
     var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
+    var pendingWebDavImportCreds by remember { mutableStateOf<Triple<String, String, String>?>(null) }
     var showImportConfirmDialog by remember { mutableStateOf(false) }
     var importPassword by remember { mutableStateOf("") }
     var importPasswordError by remember { mutableStateOf<String?>(null) }
@@ -218,6 +224,7 @@ fun BackupScreen(
                 lastAction = formatBackupLastAction(context, "last_offline_export_at"),
                 modifier = Modifier.weight(1f),
                 onClick = {
+                    exportTarget = ExportTarget.OFFLINE
                     exportPassword = ""
                     exportPasswordConfirm = ""
                     exportPasswordError = null
@@ -277,19 +284,36 @@ fun BackupScreen(
             confirmButton = {
                 TextButton(onClick = {
                     val uri = pendingImportUri
+                    val webDavCreds = pendingWebDavImportCreds
                     val password = importPassword
-                    if (uri != null && password.isNotEmpty()) {
+                    if (webDavCreds != null && password.isNotEmpty()) {
                         scope.launch {
-                            val success = viewModel.importEncryptedFrom(context, uri, password)
+                            val (webDavUrl, webDavUsername, webDavPassword) = webDavCreds
+                            val success = viewModel.importEncryptedFromWebDav(context, webDavUrl, webDavUsername, webDavPassword, password)
                             if (success) {
                                 context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-                                    .edit().putLong("last_offline_import_at", System.currentTimeMillis()).apply()
+                                    .edit().putLong("last_cloud_import_at", System.currentTimeMillis()).apply()
                                 showImportConfirmDialog = false
+                                pendingWebDavImportCreds = null
                                 importPassword = ""
                                 importPasswordError = null
                                 Toast.makeText(context, importSuccessMsg, Toast.LENGTH_SHORT).show()
                             } else {
                                 importPasswordError = "Incorrect password or corrupted file"
+                            }
+                        } else if (uri != null && password.isNotEmpty()) {
+                            scope.launch {
+                                val success = viewModel.importEncryptedFrom(context, uri, password)
+                                if (success) {
+                                    context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+                                        .edit().putLong("last_offline_import_at", System.currentTimeMillis()).apply()
+                                    showImportConfirmDialog = false
+                                    importPassword = ""
+                                    importPasswordError = null
+                                    Toast.makeText(context, importSuccessMsg, Toast.LENGTH_SHORT).show()
+                                } else {
+                                    importPasswordError = "Incorrect password or corrupted file"
+                                }
                             }
                         }
                     }
@@ -476,8 +500,15 @@ fun BackupScreen(
                             )
                             Spacer(Modifier.height(16.dp))
                             Button(
-                                onClick = { },
-                                modifier = Modifier.fillMaxWidth()
+                                onClick = {
+                                    exportTarget = ExportTarget.WEBDAV
+                                    exportPassword = ""
+                                    exportPasswordConfirm = ""
+                                    exportPasswordError = null
+                                    showExportPasswordDialog = true
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = webdavExportUrl.isNotBlank() && webdavExportUsername.isNotBlank() && webdavExportPassword.isNotBlank()
                             ) {
                                 Text("Export")
                             }
@@ -563,8 +594,14 @@ fun BackupScreen(
                             )
                             Spacer(Modifier.height(16.dp))
                             Button(
-                                onClick = { },
-                                modifier = Modifier.fillMaxWidth()
+                                onClick = {
+                                    pendingWebDavImportCreds = Triple(webdavImportUrl, webdavImportUsername, webdavImportPassword)
+                                    importPassword = ""
+                                    importPasswordError = null
+                                    showImportConfirmDialog = true
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = webdavImportUrl.isNotBlank() && webdavImportUsername.isNotBlank() && webdavImportPassword.isNotBlank()
                             ) {
                                 Text("Import")
                             }
