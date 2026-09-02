@@ -401,12 +401,27 @@ fun BackupScreen(
                             exportPasswordError = "Passwords do not match"
                         }
                         else -> {
-                            pendingExportPassword = exportPassword
+                            val backupPassword = exportPassword
+                            pendingExportPassword = backupPassword
                             showExportPasswordDialog = false
                             exportPassword = ""
                             exportPasswordConfirm = ""
                             exportPasswordError = null
-                            offlineExportLauncher.launch(backupFileName())
+                            when (exportTarget) {
+                                ExportTarget.OFFLINE -> offlineExportLauncher.launch(backupFileName())
+                                ExportTarget.WEBDAV -> {
+                                    scope.launch {
+                                        val success = viewModel.exportEncryptedToWebDav(context, webdavExportUrl, webdavExportUsername, webdavExportPassword, backupPassword)
+                                        if (success) {
+                                            context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+                                                .edit().putLong("last_cloud_export_at", System.currentTimeMillis()).apply()
+                                            Toast.makeText(context, exportSuccessMsg, Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            Toast.makeText(context, exportFailMsg, Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }) {
