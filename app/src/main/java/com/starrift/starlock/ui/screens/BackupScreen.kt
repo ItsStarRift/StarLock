@@ -287,8 +287,8 @@ fun BackupScreen(
                     val webDavCreds = pendingWebDavImportCreds
                     val password = importPassword
                     if (webDavCreds != null && password.isNotEmpty()) {
+                        val (webDavUrl, webDavUsername, webDavPassword) = webDavCreds
                         scope.launch {
-                            val (webDavUrl, webDavUsername, webDavPassword) = webDavCreds
                             val success = viewModel.importEncryptedFromWebDav(context, webDavUrl, webDavUsername, webDavPassword, password)
                             if (success) {
                                 context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
@@ -301,19 +301,19 @@ fun BackupScreen(
                             } else {
                                 importPasswordError = "Incorrect password or corrupted file"
                             }
-                        } else if (uri != null && password.isNotEmpty()) {
-                            scope.launch {
-                                val success = viewModel.importEncryptedFrom(context, uri, password)
-                                if (success) {
-                                    context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-                                        .edit().putLong("last_offline_import_at", System.currentTimeMillis()).apply()
-                                    showImportConfirmDialog = false
-                                    importPassword = ""
-                                    importPasswordError = null
-                                    Toast.makeText(context, importSuccessMsg, Toast.LENGTH_SHORT).show()
-                                } else {
-                                    importPasswordError = "Incorrect password or corrupted file"
-                                }
+                        }
+                    } else if (uri != null && password.isNotEmpty()) {
+                        scope.launch {
+                            val success = viewModel.importEncryptedFrom(context, uri, password)
+                            if (success) {
+                                context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+                                    .edit().putLong("last_offline_import_at", System.currentTimeMillis()).apply()
+                                showImportConfirmDialog = false
+                                importPassword = ""
+                                importPasswordError = null
+                                Toast.makeText(context, importSuccessMsg, Toast.LENGTH_SHORT).show()
+                            } else {
+                                importPasswordError = "Incorrect password or corrupted file"
                             }
                         }
                     }
